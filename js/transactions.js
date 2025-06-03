@@ -215,13 +215,24 @@ const Transactions = {
 
    deleteTransaction(saleId) {
        if (confirm('この取引を削除しますか？')) {
+           // 削除前に売上データを取得
+           const sale = Storage.getSales().find(s => s.id === saleId);
+           
+           // 削除実行
            Storage.deleteSale(saleId);
+           
+           // 物件が紐づいている場合は販売中に戻す
+           if (sale && sale.propertyId) {
+               Storage.updateProperty(sale.propertyId, { status: 'active' });
+           }
+           
            this.renderTransactionList();
            EstateApp.showToast('取引を削除しました');
            
-           // ダッシュボードを更新
-           if (EstateApp.currentTab === 'dashboard') {
-               Dashboard.refresh();
+           // 画面を更新
+           Dashboard.refresh();
+           if (typeof Calendar !== 'undefined') {
+               Calendar.render();
            }
        }
    },
