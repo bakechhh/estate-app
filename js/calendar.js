@@ -114,11 +114,11 @@ const Calendar = {
         const monthSales = {};
         
         sales.forEach(sale => {
-            // 売上日をローカルタイムゾーンで解析
-            const saleDate = new Date(sale.date + 'T00:00:00');
+            // 売上日を正しく解析
+            const [saleYear, saleMonth, saleDay] = sale.date.split('-').map(Number);
             
-            if (saleDate.getFullYear() === year && saleDate.getMonth() + 1 === month) {
-                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(saleDate.getDate()).padStart(2, '0')}`;
+            if (saleYear === year && saleMonth === month) {
+                const dateStr = sale.date;  // そのまま使用
                 
                 if (!monthSales[dateStr]) {
                     monthSales[dateStr] = {
