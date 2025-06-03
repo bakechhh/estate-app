@@ -827,6 +827,8 @@ textarea {
     background-color: var(--bg-secondary);
     border-radius: var(--border-radius);
     padding: 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .calendar-weekdays {
@@ -835,6 +837,7 @@ textarea {
     text-align: center;
     font-weight: bold;
     margin-bottom: 0.5rem;
+    min-width: 280px;
 }
 
 .weekday {
@@ -855,6 +858,7 @@ textarea {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 2px;
+    min-width: 280px;
 }
 
 .calendar-day {
@@ -998,6 +1002,37 @@ textarea {
     
     .sales-form {
         padding: 1rem;
+    }
+    /* カレンダーの調整 */
+    .calendar-container {
+        padding: 0.5rem;
+    }
+    
+    .calendar-day {
+        min-height: 50px;
+        padding: 0.1rem;
+    }
+    
+    .day-number {
+        font-size: 0.7rem;
+    }
+    
+    .day-sales {
+        font-size: 0.55rem;
+    }
+    
+    .day-count {
+        font-size: 0.55rem;
+    }
+    
+    /* 年間推移の調整 */
+    .yearly-content {
+        padding: 1rem;
+    }
+    
+    .yearly-chart canvas {
+        max-width: 100%;
+        height: auto;
     }
 }
 /* 物件選択と直接入力のスタイル */
@@ -1715,8 +1750,9 @@ textarea {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: 2rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
-
 .yearly-summary {
     margin-bottom: 3rem;
 }
@@ -1739,8 +1775,12 @@ textarea {
 
 .monthly-breakdown {
     margin-bottom: 3rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
-
+.monthly-breakdown table {
+    min-width: 600px;
+}
 .yearly-chart {
     margin-top: 2rem;
 }
