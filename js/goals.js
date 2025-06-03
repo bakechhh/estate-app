@@ -136,9 +136,6 @@ const Goals = {
         
         document.body.appendChild(celebration);
         
-        // 効果音を再生（オプション）
-        this.playSuccessSound();
-        
         setTimeout(() => {
             celebration.classList.add('fade-out');
             setTimeout(() => celebration.remove(), 1000);
@@ -147,7 +144,105 @@ const Goals = {
         // 実績チェック
         this.checkAchievements();
     },
-
+    showGoalModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const currentGoal = Storage.getGoals().find(g => g.period === currentMonth && g.type === 'monthly');
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>🎯 月間目標設定</h3>
+                <form id="goal-form">
+                    <div class="form-group">
+                        <label for="goal-amount">目標売上金額（円）</label>
+                        <input type="number" id="goal-amount" required min="0" 
+                               value="${currentGoal?.targetAmount || ''}" 
+                               placeholder="例：5000000">
+                    </div>
+                    <div class="form-group">
+                        <label for="goal-count">目標成約件数</label>
+                        <input type="number" id="goal-count" min="0" 
+                               value="${currentGoal?.targetCount || ''}" 
+                               placeholder="例：10">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="primary-btn">設定</button>
+                        <button type="button" class="secondary-btn" onclick="this.closest('.modal').remove()">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+        
+        document.body.appendChild(modal);
+        
+        // フォームサブミット
+        document.getElementById('goal-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amount = parseInt(document.getElementById('goal-amount').value);
+            const count = parseInt(document.getElementById('goal-count').value) || 0;
+            
+            this.setGoal('monthly', currentMonth, amount, count);
+            modal.remove();
+            this.loadCurrentGoals();
+        });
+    },
+    
+    showAllAchievements() {
+        const achievements = Storage.getAchievements();
+        const allPossibleAchievements = [
+            { id: 'first_sale', name: '初めての一歩', description: '初めての成約を達成', icon: '🎯', locked: true },
+            { id: 'monthly_10', name: '月間マスター', description: '月間10件の成約を達成', icon: '🏆', locked: true },
+            { id: 'million_deal', name: 'ミリオンセラー', description: '100万円以上の収益を達成', icon: '💰', locked: true },
+            { id: 'perfect_month', name: 'パーフェクト達成', description: '月間目標を100%達成', icon: '⭐', locked: true }
+        ];
+        
+        // 解除済みの実績を更新
+        achievements.forEach(achievement => {
+            const index = allPossibleAchievements.findIndex(a => a.id === achievement.id);
+            if (index !== -1) {
+                allPossibleAchievements[index] = { ...achievement, locked: false };
+            }
+        });
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        
+        modal.innerHTML = `
+            <div class="modal-content modal-large">
+                <h3>🏆 実績一覧</h3>
+                <div class="achievement-grid">
+                    ${allPossibleAchievements.map(achievement => `
+                        <div class="achievement-item ${achievement.locked ? 'locked' : ''}">
+                            <div class="achievement-icon">${achievement.icon}</div>
+                            <div class="achievement-name">${achievement.name}</div>
+                            <div class="achievement-description">${achievement.description}</div>
+                            ${!achievement.locked && achievement.unlockedAt ? 
+                                `<div class="achievement-date">解除日: ${EstateApp.formatDate(achievement.unlockedAt)}</div>` : 
+                                '<div class="achievement-status">未解除</div>'
+                            }
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="modal-actions">
+                    <button class="secondary-btn" onclick="this.closest('.modal').remove()">閉じる</button>
+                </div>
+            </div>
+        `;
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+        
+        document.body.appendChild(modal);
+    }
     generateConfetti(count) {
         let confetti = '';
         const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500'];
@@ -167,13 +262,6 @@ const Goals = {
         }
         
         return confetti;
-    },
-
-    playSuccessSound() {
-        // 効果音を再生（音声ファイルが必要）
-        const audio = new Audio('sounds/success.mp3');
-        audio.volume = 0.5;
-        audio.play().catch(e => console.log('効果音の再生に失敗しました'));
     },
 
     showRanking(period = 'monthly') {
