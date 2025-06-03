@@ -83,7 +83,8 @@ const Dashboard = {
            container.innerHTML = '<p class="no-data">取引履歴がありません</p>';
            return;
        }
-       
+       // 日付でソートして最新5件を取得
+       const sortedSales = sales.sort((a, b) => new Date(b.date) - new Date(a.date));
        container.innerHTML = sales.slice(0, 5).map(sale => {
            let displayName = '';
            let amount = 0;
