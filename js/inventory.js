@@ -43,7 +43,7 @@ const Inventory = {
         // 取引様態による媒介契約日の表示制御
         document.getElementById('transaction-mode').addEventListener('change', (e) => {
             const mode = e.target.value;
-            const contractFields = ['contract-date', 'contract-end-date', 'reins-number', 'reins-date'];
+            const contractFields = ['contract-date', 'contract-end-date', 'reins-number', 'reins-date', 'reins-deadline'];
             const isMediation = ['exclusive', 'special', 'general'].includes(mode);
             
             contractFields.forEach(fieldId => {
@@ -54,20 +54,45 @@ const Inventory = {
                     if (fieldId === 'contract-date' || fieldId === 'contract-end-date') {
                         field.required = true;
                     }
+                    // 専任・専属の場合はレインズ登録期日も必須
+                    if (fieldId === 'reins-deadline' && (mode === 'exclusive' || mode === 'special')) {
+                        field.required = true;
+                    }
                 } else {
                     formGroup.style.display = 'none';
                     field.required = false;
                 }
             });
+            
+            // 取引様態変更時にレインズ登録期日を再計算
+            const contractDate = document.getElementById('contract-date').value;
+            if (contractDate && (mode === 'exclusive' || mode === 'special')) {
+                const reinsDeadline = new Date(contractDate);
+                const days = mode === 'exclusive' ? 5 : 7;
+                reinsDeadline.setDate(reinsDeadline.getDate() + days);
+                document.getElementById('reins-deadline').value = reinsDeadline.toISOString().split('T')[0];
+            }
         });
 
-        // 媒介契約日から満了日を自動計算
+        // 媒介契約日から満了日とレインズ登録期日を自動計算
         document.getElementById('contract-date').addEventListener('change', (e) => {
             if (e.target.value) {
                 const contractDate = new Date(e.target.value);
+                const mode = document.getElementById('transaction-mode').value;
+                
+                // 媒介契約満了日の計算（3ヶ月後）
                 const endDate = new Date(contractDate);
-                endDate.setMonth(endDate.getMonth() + 3); // 3ヶ月後
+                endDate.setMonth(endDate.getMonth() + 3);
                 document.getElementById('contract-end-date').value = endDate.toISOString().split('T')[0];
+                
+                // レインズ登録期日の自動計算
+                if (mode === 'exclusive' || mode === 'special') {
+                    const reinsDeadline = new Date(contractDate);
+                    // 専属専任は5日以内、専任は7日以内
+                    const days = mode === 'exclusive' ? 5 : 7;
+                    reinsDeadline.setDate(reinsDeadline.getDate() + days);
+                    document.getElementById('reins-deadline').value = reinsDeadline.toISOString().split('T')[0];
+                }
             }
         });
 
@@ -108,6 +133,7 @@ const Inventory = {
             document.getElementById('contract-end-date').value = property.contractEndDate || '';
             document.getElementById('reins-number').value = property.reinsNumber || '';
             document.getElementById('reins-date').value = property.reinsDate || '';
+            document.getElementById('reins-deadline').value = property.reinsDeadline || '';
             document.getElementById('property-notes').value = property.notes || '';
             
             // 取引様態変更イベントを発火
@@ -144,6 +170,7 @@ const Inventory = {
             contractEndDate: document.getElementById('contract-end-date').value,
             reinsNumber: document.getElementById('reins-number').value,
             reinsDate: document.getElementById('reins-date').value,
+            reinsDeadline: document.getElementById('reins-deadline').value,
             notes: document.getElementById('property-notes').value
         };
 
