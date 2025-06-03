@@ -1756,3 +1756,40 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+/* 売上編集モーダル */
+#sale-edit-modal .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#edit-sale-form .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+#edit-sale-form .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+/* 取引管理のアクションボタン調整 */
+.transaction-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.transaction-actions button {
+    flex: 0 1 auto;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .transaction-actions {
+        flex-direction: column;
+    }
+    
+    .transaction-actions button {
+        width: 100%;
+    }
+}
