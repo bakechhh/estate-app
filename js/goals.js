@@ -101,8 +101,6 @@ const Goals = {
             setTimeout(() => celebration.remove(), 1000);
         }, 5000);
         
-        // 実績チェック
-        this.checkAchievements();
     },
 
     showGoalModal() {
