@@ -1677,3 +1677,82 @@ textarea {
     color: var(--text-secondary);
     margin-top: 0.5rem;
 }
+/* 通知削除ボタン */
+.notification-item {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+}
+
+.notification-delete-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0.25rem;
+    line-height: 1;
+}
+
+.notification-delete-btn:hover {
+    color: var(--danger-color);
+}
+
+/* 年間推移 */
+.yearly-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: center;
+}
+
+.yearly-content {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+}
+
+.yearly-summary {
+    margin-bottom: 3rem;
+}
+
+.summary-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+}
+
+.summary-card.large {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.summary-card.large .summary-label,
+.summary-card.large .summary-value {
+    color: white;
+}
+
+.monthly-breakdown {
+    margin-bottom: 3rem;
+}
+
+.yearly-chart {
+    margin-top: 2rem;
+}
+
+#yearly-chart {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .summary-row {
+        grid-template-columns: 1fr;
+    }
+}
