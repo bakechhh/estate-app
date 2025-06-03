@@ -138,9 +138,13 @@ const EstateApp = {
             const existingNotifications = Storage.getNotifications();
             const today = new Date().toDateString();
             
-            // 同じ物件・同じ種類の通知が今日既に作成されているかチェック
+            // 通知IDの生成
+            const notificationId = deadline.property ? deadline.property.id : deadline.sale?.id;
+            const notificationName = deadline.property ? deadline.property.name : deadline.propertyName;
+            
+            // 同じ物件/売上・同じ種類の通知が今日既に作成されているかチェック
             const alreadyNotified = existingNotifications.some(n => 
-                n.propertyId === deadline.property.id && 
+                (n.propertyId === notificationId || n.saleId === notificationId) && 
                 n.type === deadline.type &&
                 new Date(n.createdAt).toDateString() === today
             );
@@ -148,8 +152,9 @@ const EstateApp = {
             if (!alreadyNotified) {
                 const notification = {
                     type: deadline.type,
-                    propertyId: deadline.property.id,
-                    propertyName: deadline.property.name,
+                    propertyId: deadline.property?.id,
+                    saleId: deadline.sale?.id,
+                    propertyName: notificationName,
                     message: deadline.message,
                     urgent: deadline.urgent
                 };
@@ -201,12 +206,16 @@ const EstateApp = {
                 body: `${notification.propertyName}: ${notification.message}`,
                 icon: 'icons/icon-192.png',
                 badge: 'icons/icon-192.png',
-                tag: notification.propertyId
+                tag: notification.propertyId || notification.saleId
             });
             
             n.onclick = () => {
                 window.focus();
-                document.querySelector('[data-tab="inventory"]').click();
+                if (notification.propertyId) {
+                    document.querySelector('[data-tab="inventory"]').click();
+                } else if (notification.saleId) {
+                    document.querySelector('[data-tab="transactions"]').click();
+                }
                 n.close();
             };
         }
