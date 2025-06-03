@@ -1,4 +1,5 @@
-// calendar.js - カレンダー機能
+// calendar.js を修正
+
 const Calendar = {
     currentYearMonth: '',
     
@@ -8,7 +9,6 @@ const Calendar = {
     },
 
     setupEventListeners() {
-        // カレンダー表示ボタン（ダッシュボードなどから）
         document.addEventListener('showCalendarWithDate', (e) => {
             this.currentYearMonth = e.detail.yearMonth;
             this.render();
@@ -21,12 +21,12 @@ const Calendar = {
     },
 
     render() {
-        // カレンダービューをダッシュボードに統合
         const calendarContainer = document.getElementById('calendar-view');
         if (!calendarContainer) return;
         
         const [year, month] = this.currentYearMonth.split('-').map(Number);
-        const monthSales = this.getMonthSalesData();
+        const salesData = this.getMonthSalesData();
+        const deadlineData = this.getMonthDeadlines();
         
         calendarContainer.innerHTML = `
             <div class="calendar-header">
@@ -35,7 +35,7 @@ const Calendar = {
                 <button class="month-nav-btn" onclick="Calendar.changeMonth(1)">→</button>
             </div>
             <div class="calendar-container">
-                ${this.generateCalendarGrid(year, month, monthSales)}
+                ${this.generateCalendarGrid(year, month, salesData, deadlineData)}
             </div>
         `;
     },
@@ -47,7 +47,7 @@ const Calendar = {
         this.render();
     },
 
-    generateCalendarGrid(year, month, monthSales) {
+    generateCalendarGrid(year, month, salesData, deadlineData) {
         const firstDay = new Date(year, month - 1, 1);
         const lastDay = new Date(year, month, 0);
         const firstDayOfWeek = firstDay.getDay();
@@ -74,17 +74,31 @@ const Calendar = {
         // 当月の日付
         for (let day = 1; day <= lastDate; day++) {
             const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const daySales = monthSales[dateStr];
+            const daySales = salesData[dateStr];
+            const dayDeadlines = deadlineData[dateStr] || [];
             
-            html += `<div class="calendar-day ${daySales ? 'has-sales' : ''}" 
-                        onclick="Calendar.showDayDetail('${dateStr}')">
+            let dayClass = 'calendar-day';
+            if (daySales) dayClass += ' has-sales';
+            if (dayDeadlines.length > 0) dayClass += ' has-deadlines';
+            
+            html += `<div class="${dayClass}" onclick="Calendar.showDayDetail('${dateStr}')">
                         <div class="day-number">${day}</div>`;
             
+            // 売上情報
             if (daySales) {
                 html += `
-                    <div class="day-sales">${EstateApp.formatCurrency(daySales.totalRevenue, false)}</div>
+                    <div class="day-sales">${this.formatCurrency(daySales.totalRevenue)}</div>
                     <div class="day-count">${daySales.count}件</div>
                 `;
+            }
+            
+            // 期日アイコン
+            if (dayDeadlines.length > 0) {
+                html += '<div class="day-deadlines">';
+                dayDeadlines.forEach(deadline => {
+                    html += `<span class="deadline-icon ${deadline.type}" title="${deadline.tooltip}">${deadline.icon}</span>`;
+                });
+                html += '</div>';
             }
             
             html += '</div>';
@@ -100,9 +114,11 @@ const Calendar = {
         const monthSales = {};
         
         sales.forEach(sale => {
-            const saleDate = new Date(sale.date);
+            // 売上日をローカルタイムゾーンで解析
+            const saleDate = new Date(sale.date + 'T00:00:00');
+            
             if (saleDate.getFullYear() === year && saleDate.getMonth() + 1 === month) {
-                const dateStr = saleDate.toISOString().split('T')[0];
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(saleDate.getDate()).padStart(2, '0')}`;
                 
                 if (!monthSales[dateStr]) {
                     monthSales[dateStr] = {
@@ -123,12 +139,101 @@ const Calendar = {
         return monthSales;
     },
 
-    showDayDetail(dateStr) {
-        const monthSales = this.getMonthSalesData();
-        const daySales = monthSales[dateStr];
+    getMonthDeadlines() {
+        const [year, month] = this.currentYearMonth.split('-').map(Number);
+        const properties = Storage.getProperties();
+        const sales = Storage.getSales();
+        const deadlines = {};
         
-        if (!daySales || daySales.sales.length === 0) {
-            EstateApp.showToast('この日の売上はありません');
+        // 物件の期日チェック
+        properties.forEach(property => {
+            // 媒介契約満了日
+            if (property.contractEndDate) {
+                const endDate = new Date(property.contractEndDate + 'T00:00:00');
+                if (endDate.getFullYear() === year && endDate.getMonth() + 1 === month) {
+                    const dateStr = this.formatDateStr(endDate);
+                    if (!deadlines[dateStr]) deadlines[dateStr] = [];
+                    deadlines[dateStr].push({
+                        type: 'contract-end',
+                        icon: '📋',
+                        tooltip: `媒介契約満了: ${property.name}`
+                    });
+                }
+            }
+            
+            // レインズ登録期日
+            if (property.reinsDeadline) {
+                const reinsDate = new Date(property.reinsDeadline + 'T00:00:00');
+                if (reinsDate.getFullYear() === year && reinsDate.getMonth() + 1 === month) {
+                    const dateStr = this.formatDateStr(reinsDate);
+                    if (!deadlines[dateStr]) deadlines[dateStr] = [];
+                    deadlines[dateStr].push({
+                        type: 'reins-deadline',
+                        icon: '🏢',
+                        tooltip: `レインズ登録期日: ${property.name}`
+                    });
+                }
+            }
+        });
+        
+        // 売上の期日チェック
+        sales.forEach(sale => {
+            if (sale.type !== 'realestate') return;
+            
+            // 決済期日
+            if (sale.settlementDate) {
+                const settlementDate = new Date(sale.settlementDate + 'T00:00:00');
+                if (settlementDate.getFullYear() === year && settlementDate.getMonth() + 1 === month) {
+                    const dateStr = this.formatDateStr(settlementDate);
+                    if (!deadlines[dateStr]) deadlines[dateStr] = [];
+                    deadlines[dateStr].push({
+                        type: 'settlement',
+                        icon: '💰',
+                        tooltip: `決済期日: ${sale.propertyName || sale.dealName}`
+                    });
+                }
+            }
+            
+            // 融資特約期日
+            if (sale.loanConditionDate) {
+                const loanDate = new Date(sale.loanConditionDate + 'T00:00:00');
+                if (loanDate.getFullYear() === year && loanDate.getMonth() + 1 === month) {
+                    const dateStr = this.formatDateStr(loanDate);
+                    if (!deadlines[dateStr]) deadlines[dateStr] = [];
+                    deadlines[dateStr].push({
+                        type: 'loan-condition',
+                        icon: '🏦',
+                        tooltip: `融資特約期日: ${sale.propertyName || sale.dealName}`
+                    });
+                }
+            }
+        });
+        
+        return deadlines;
+    },
+
+    formatDateStr(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    },
+
+    formatCurrency(amount) {
+        if (amount >= 10000) {
+            return `${Math.floor(amount / 10000)}万`;
+        }
+        return amount.toLocaleString();
+    },
+
+    showDayDetail(dateStr) {
+        const salesData = this.getMonthSalesData();
+        const deadlineData = this.getMonthDeadlines();
+        const daySales = salesData[dateStr];
+        const dayDeadlines = deadlineData[dateStr] || [];
+        
+        if (!daySales && dayDeadlines.length === 0) {
+            EstateApp.showToast('この日のデータはありません');
             return;
         }
         
@@ -137,41 +242,62 @@ const Calendar = {
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-content">
-                <h3>${new Date(dateStr).toLocaleDateString('ja-JP')}の売上</h3>
-                <div class="day-sales-list">
-                    ${daySales.sales.map(sale => {
-                        let description = '';
-                        let amount = 0;
-                        
-                        switch (sale.type) {
-                            case 'realestate':
-                                description = sale.propertyName || sale.customerName;
-                                amount = sale.profit;
-                                break;
-                            case 'renovation':
-                                description = sale.propertyName;
-                                amount = sale.profit;
-                                break;
-                            case 'other':
-                                description = sale.customerName;
-                                amount = sale.amount;
-                                break;
-                        }
-                        
-                        return `
-                            <div class="day-detail-item">
-                                <div class="day-detail-title">${description}</div>
-                                <div class="day-detail-info">
-                                    ${EstateApp.formatCurrency(amount)}
+                <h3>${new Date(dateStr + 'T00:00:00').toLocaleDateString('ja-JP')}の詳細</h3>
+                
+                ${daySales ? `
+                    <div class="day-detail-section">
+                        <h4>📊 売上情報</h4>
+                        <div class="day-sales-list">
+                            ${daySales.sales.map(sale => {
+                                let description = '';
+                                let amount = 0;
+                                
+                                switch (sale.type) {
+                                    case 'realestate':
+                                        description = sale.propertyName || sale.dealName || sale.customerName;
+                                        amount = sale.profit;
+                                        break;
+                                    case 'renovation':
+                                        description = sale.propertyName || sale.dealName;
+                                        amount = sale.profit;
+                                        break;
+                                    case 'other':
+                                        description = sale.customerName || sale.dealName;
+                                        amount = sale.amount;
+                                        break;
+                                }
+                                
+                                return `
+                                    <div class="day-detail-item">
+                                        <div class="day-detail-title">${description}</div>
+                                        <div class="day-detail-info">
+                                            ${EstateApp.formatCurrency(amount)}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="day-total">
+                            <span>売上合計：</span>
+                            <span>${EstateApp.formatCurrency(daySales.totalRevenue)}</span>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${dayDeadlines.length > 0 ? `
+                    <div class="day-detail-section">
+                        <h4>📅 期日情報</h4>
+                        <div class="deadline-list">
+                            ${dayDeadlines.map(deadline => `
+                                <div class="deadline-item">
+                                    <span class="deadline-icon">${deadline.icon}</span>
+                                    <span>${deadline.tooltip}</span>
                                 </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-                <div class="day-total">
-                    <span>合計：</span>
-                    <span>${EstateApp.formatCurrency(daySales.totalRevenue)}</span>
-                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
                 <div class="modal-actions">
                     <button class="secondary-btn" onclick="this.closest('.modal').remove()">閉じる</button>
                 </div>
