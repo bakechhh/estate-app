@@ -1870,3 +1870,17 @@ textarea {
         font-size: 0.55rem;
     }
 }
+setGoal(type, period, targetAmount, targetContracts, targetMediations) {
+    const goal = {
+        id: Date.now().toString(),
+        type,
+        period,
+        targetAmount,
+        targetContracts,
+        targetMediations,
+        createdAt: new Date().toISOString()
+    };
+    
+    Storage.saveGoal(goal);
+    EstateApp.showToast('目標を設定しました');
+}
