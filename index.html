@@ -34,6 +34,7 @@
             <button class="tab-btn" data-tab="inventory">在庫管理</button>
             <button class="tab-btn" data-tab="sales">売上登録</button>
             <button class="tab-btn" data-tab="transactions">取引管理</button>
+            <button class="tab-btn" data-tab="yearly">年間推移</button>
             <button class="tab-btn" data-tab="reports">レポート</button>
             <button class="tab-btn" data-tab="settings">設定</button>
         </nav>
@@ -179,8 +180,28 @@
                         </div>
             
                         <div class="form-group">
+                            <label for="sale-number">売上番号（任意）</label>
+                            <input type="text" id="sale-number" placeholder="例：2024-001">
+                        </div>
+                        
+                        <div class="form-group">
                             <label for="sale-date">成約日</label>
                             <input type="date" id="sale-date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="settlement-date">決済期日</label>
+                            <input type="date" id="settlement-date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="loan-condition-date">融資特約期日（任意）</label>
+                            <input type="date" id="loan-condition-date">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="collection-date">回収日（任意）</label>
+                            <input type="date" id="collection-date">
                         </div>
             
                         <div class="form-group">
@@ -399,7 +420,19 @@
                     <!-- 取引リストがここに表示される -->
                 </div>
             </div>
-
+            <!-- 年間推移タブ -->
+            <div id="yearly-tab" class="tab-content">
+                <div class="yearly-header">
+                    <select id="yearly-year">
+                        <!-- 年度選択オプションがJavaScriptで動的に生成される -->
+                    </select>
+                    <button id="refresh-yearly-btn" class="primary-btn">更新</button>
+                </div>
+            
+                <div id="yearly-content" class="yearly-content">
+                    <!-- 年間推移データがここに表示される -->
+                </div>
+            </div>
             <!-- レポートタブ -->
             <div id="reports-tab" class="tab-content">
                 <div class="report-header">
@@ -465,7 +498,7 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="property-code">物件番号</label>
-                            <input type="text" id="property-code" readonly>
+                            <input type="text" id="property-code" required placeholder="例：25-1-1">
                         </div>
 
                         <div class="form-group">
