@@ -292,7 +292,12 @@
                             <label for="reno-deal-name">案件名</label>
                             <input type="text" id="reno-deal-name" placeholder="例：〇〇邸リフォーム工事">
                         </div>
-
+                        
+                        <div class="form-group">
+                            <label for="reno-sale-number">売上番号（任意）</label>
+                            <input type="text" id="reno-sale-number" placeholder="例：2024-001">
+                        </div>
+                        
                         <div class="form-group">
                             <label for="reno-property-name">物件名/顧客名</label>
                             <input type="text" id="reno-property-name" required>
@@ -317,7 +322,12 @@
                             <label for="reno-price">請求金額（円）</label>
                             <input type="number" id="reno-price" required min="0">
                         </div>
-            
+
+                        <div class="form-group">
+                            <label for="reno-collection-date">回収日（任意）</label>
+                            <input type="date" id="reno-collection-date">
+                        </div>
+                        
                         <div class="form-group">
                             <label for="reno-contractor">施工業者</label>
                             <input type="text" id="reno-contractor">
@@ -356,6 +366,11 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="other-sale-number">売上番号（任意）</label>
+                            <input type="text" id="other-sale-number" placeholder="例：2024-001">
+                        </div>
+                        
+                        <div class="form-group">
                             <label for="other-type">収益種別</label>
                             <select id="other-type" required>
                                 <option value="">選択してください</option>
@@ -375,7 +390,12 @@
                             <label for="other-amount">金額（円）</label>
                             <input type="number" id="other-amount" required min="0">
                         </div>
-            
+
+                        <div class="form-group">
+                            <label for="other-collection-date">回収日（任意）</label>
+                            <input type="date" id="other-collection-date">
+                        </div>
+                        
                         <div class="form-group">
                             <label for="other-customer">顧客名/案件名</label>
                             <input type="text" id="other-customer" required>
@@ -634,6 +654,16 @@
             </div>
         </div>
 
+        <!-- 売上編集モーダル -->
+        <div id="sale-edit-modal" class="modal" style="display: none;">
+            <div class="modal-content modal-large">
+                <h3 id="sale-edit-modal-title">売上編集</h3>
+                <div id="sale-edit-form-container">
+                    <!-- 編集フォームが動的に挿入される -->
+                </div>
+            </div>
+        </div>
+
         <!-- 通知パネル -->
         <div id="notification-panel" class="notification-panel" style="display: none;">
             <div class="notification-header">
@@ -656,10 +686,7 @@
     <script src="js/notifications.js"></script>
     <script src="js/calendar.js"></script>
     <script src="js/effects.js"></script>
-    <script src="js/transactions.js"></script>
     <script src="js/yearly.js"></script>
-    <script src="js/reports.js"></script>
-    <!-- ここに新しいファイルを追加 -->
     <script src="js/goals.js"></script>
     <script src="js/memos.js"></script>
     <script src="js/todos.js"></script>
