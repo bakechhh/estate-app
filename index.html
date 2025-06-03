@@ -28,6 +28,7 @@
             <button class="tab-btn active" data-tab="dashboard">ダッシュボード</button>
             <button class="tab-btn" data-tab="inventory">在庫管理</button>
             <button class="tab-btn" data-tab="sales">売上登録</button>
+            <button class="tab-btn" data-tab="transactions">取引管理</button>
             <button class="tab-btn" data-tab="reports">レポート</button>
             <button class="tab-btn" data-tab="settings">設定</button>
         </nav>
@@ -46,15 +47,17 @@
                                 <span class="stat-value" id="monthly-revenue">¥0</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-label">成約件数</span>
+                                <span class="stat-label">案件件数</span>
                                 <span class="stat-value" id="monthly-deals">0件</span>
+                                <div class="stat-detail" id="deal-breakdown"></div>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label">在庫物件数</span>
                                 <span class="stat-value" id="inventory-count">0件</span>
+                                <div class="stat-detail" id="inventory-breakdown"></div>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-label">在庫総額</span>
+                                <span class="stat-label">在庫総額（売主物件）</span>
                                 <span class="stat-value" id="inventory-value">¥0</span>
                             </div>
                         </div>
@@ -74,12 +77,6 @@
                         <div id="recent-transactions" class="transaction-list">
                             <p class="no-data">取引履歴がありません</p>
                         </div>
-                    </div>
-
-                    <!-- 売上グラフ -->
-                    <div class="dashboard-card chart-card">
-                        <h3>📈 売上推移（税抜）</h3>
-                        <canvas id="revenue-chart"></canvas>
                     </div>
 
                     <!-- カレンダービュー -->
@@ -130,6 +127,12 @@
                 <!-- 売買サブタブ -->
                 <div id="realestate-subtab" class="sub-tab-content active">
                     <form id="realestate-form" class="sales-form">
+                        <div class="form-group">
+                            <label for="deal-name">案件名</label>
+                            <input type="text" id="deal-name" placeholder="例：渋谷区マンション売買">
+                            <div class="form-hint">未入力の場合は顧客名が使用されます</div>
+                        </div>
+
                         <div class="form-group">
                             <label for="sale-property">物件選択（任意）</label>
                             <select id="sale-property">
@@ -236,6 +239,11 @@
                 <div id="renovation-subtab" class="sub-tab-content">
                     <form id="renovation-form" class="sales-form">
                         <div class="form-group">
+                            <label for="reno-deal-name">案件名</label>
+                            <input type="text" id="reno-deal-name" placeholder="例：〇〇邸リフォーム工事">
+                        </div>
+
+                        <div class="form-group">
                             <label for="reno-property-name">物件名/顧客名</label>
                             <input type="text" id="reno-property-name" required>
                         </div>
@@ -293,6 +301,11 @@
                 <div id="other-subtab" class="sub-tab-content">
                     <form id="other-form" class="sales-form">
                         <div class="form-group">
+                            <label for="other-deal-name">案件名</label>
+                            <input type="text" id="other-deal-name" placeholder="例：〇〇コンサルティング">
+                        </div>
+
+                        <div class="form-group">
                             <label for="other-type">収益種別</label>
                             <select id="other-type" required>
                                 <option value="">選択してください</option>
@@ -325,6 +338,36 @@
             
                         <button type="submit" class="primary-btn">売上登録</button>
                     </form>
+                </div>
+            </div>
+
+            <!-- 取引管理タブ -->
+            <div id="transactions-tab" class="tab-content">
+                <div class="transactions-header">
+                    <div class="search-filter-group">
+                        <input type="text" id="transaction-search" placeholder="案件名・顧客名で検索...">
+                        <select id="transaction-type-filter">
+                            <option value="all">すべての種別</option>
+                            <option value="realestate">売買</option>
+                            <option value="renovation">リフォーム</option>
+                            <option value="other">その他</option>
+                        </select>
+                        <select id="transaction-period-filter">
+                            <option value="all">全期間</option>
+                            <option value="month">今月</option>
+                            <option value="quarter">今四半期</option>
+                            <option value="year">今年</option>
+                        </select>
+                        <select id="collection-status-filter">
+                            <option value="all">すべて</option>
+                            <option value="pending">未回収</option>
+                            <option value="collected">回収済</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="transaction-list" class="transaction-management-list">
+                    <!-- 取引リストがここに表示される -->
                 </div>
             </div>
 
@@ -545,6 +588,7 @@
     <script src="js/dashboard.js"></script>
     <script src="js/inventory.js"></script>
     <script src="js/sales.js"></script>
+    <script src="js/transactions.js"></script>
     <script src="js/reports.js"></script>
     <script src="js/export.js"></script>
     <script src="js/notifications.js"></script>
