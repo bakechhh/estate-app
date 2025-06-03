@@ -1181,3 +1181,452 @@ textarea {
 #other-deal-name {
     border-color: var(--info-color);
 }
+/* 目標管理 */
+.goal-progress-container {
+    margin-bottom: 1rem;
+}
+
+.goal-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    height: 20px;
+    background-color: var(--bg-secondary);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4285f4, #34a853);
+    transition: width 0.5s ease;
+}
+
+.progress-percentage {
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.goal-achieved {
+    text-align: center;
+    color: var(--success-color);
+    font-weight: bold;
+    margin-top: 0.5rem;
+    animation: pulse 1s infinite;
+}
+
+/* アニメーション */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* 実績解除モーダル */
+.achievement-unlock-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+    z-index: 10002;
+    text-align: center;
+    animation: achievementBounce 0.5s ease;
+}
+
+@keyframes achievementBounce {
+    0% { transform: translate(-50%, -50%) scale(0); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.achievement-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+}
+
+/* 成約祝いアニメーション */
+.celebration-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10001;
+}
+
+.confetti-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    animation: confettiFall linear;
+}
+
+@keyframes confettiFall {
+    to {
+        transform: translateY(100vh) rotate(360deg);
+    }
+}
+
+.celebration-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.celebration-message h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.deal-name {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.deal-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--success-color);
+}
+
+/* TODO */
+.todo-widget {
+    grid-column: span 1;
+}
+
+.todo-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+    transition: var(--transition);
+}
+
+.todo-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+.todo-item.priority-high {
+    border-left: 3px solid var(--danger-color);
+}
+
+.todo-item.priority-normal {
+    border-left: 3px solid var(--warning-color);
+}
+
+.todo-item.priority-low {
+    border-left: 3px solid var(--info-color);
+}
+
+.todo-item input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.todo-item label {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.todo-title {
+    font-weight: 500;
+}
+
+.todo-due {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.todo-due .overdue {
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+.todo-due .today {
+    color: var(--warning-color);
+    font-weight: bold;
+}
+
+.todo-due .tomorrow {
+    color: var(--info-color);
+}
+
+.add-todo-btn {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: none;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.add-todo-btn:hover {
+    background-color: var(--bg-secondary);
+}
+
+/* TODO通知アラート */
+.todo-alert {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background-color: var(--bg-primary);
+    border: 2px solid var(--warning-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.todo-alert-content h4 {
+    margin-bottom: 0.5rem;
+}
+
+.todo-alert-due {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.todo-alert-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.todo-alert-actions button {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+/* TODO完了アニメーション */
+.todo-complete-animation {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 5rem;
+    color: var(--success-color);
+    animation: todoComplete 1s ease;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+@keyframes todoComplete {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2) rotate(180deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* メモ */
+.memo-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.memo-item {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.memo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.memo-date {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.memo-delete-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.memo-delete-btn:hover {
+    color: var(--danger-color);
+}
+
+.memo-content {
+    min-height: 50px;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    background-color: var(--bg-primary);
+}
+
+.memo-content:focus {
+    outline: 2px solid var(--accent-color);
+}
+
+.memo-add-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.memo-add-section textarea {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+/* バッジ */
+.badges-card {
+    grid-column: span 1;
+}
+
+#achievement-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.achievement-badge {
+    font-size: 2rem;
+    padding: 0.5rem;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.achievement-badge:hover {
+    transform: scale(1.1);
+}
+
+.achievement-badge.locked {
+    filter: grayscale(100%);
+    opacity: 0.5;
+}
+
+/* ランキング */
+.ranking-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ranking-item.top-three {
+    background-color: var(--bg-secondary);
+}
+
+.rank {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    min-width: 50px;
+    text-align: center;
+}
+
+.rank-info {
+    flex: 1;
+}
+
+.rank-name {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.rank-stats {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+/* ダッシュボードグリッドの最適化 */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1rem;
+}
+
+/* 特定のカードのサイズ調整 */
+.summary-card,
+.calendar-card {
+    grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+    .summary-card,
+    .calendar-card {
+        grid-column: span 1;
+    }
+}
+/* 情報ボタン（メモ用） */
+.info-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    background-color: var(--info-color);
+    color: white;
+}
+
+.info-btn:hover {
+    background-color: #357abd;
+}
