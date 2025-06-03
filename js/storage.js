@@ -7,7 +7,6 @@ const Storage = {
         THEME: 'estate_theme',
         NOTIFICATIONS: 'estate_notifications',
         GOALS: 'estate_goals',
-        ACHIEVEMENTS: 'estate_achievements',
         MEMOS: 'estate_memos',
         TODOS: 'estate_todos'
     },
@@ -170,7 +169,7 @@ const Storage = {
         const data = localStorage.getItem(this.KEYS.GOALS);
         return data ? JSON.parse(data) : [];
     },
-
+    
     saveGoal(goal) {
         const goals = this.getGoals();
         const existingIndex = goals.findIndex(g => 
@@ -186,22 +185,6 @@ const Storage = {
         localStorage.setItem(this.KEYS.GOALS, JSON.stringify(goals));
         return goal;
     },
-
-    // 実績管理
-    getAchievements() {
-        const data = localStorage.getItem(this.KEYS.ACHIEVEMENTS);
-        return data ? JSON.parse(data) : [];
-    },
-
-    saveAchievement(achievement) {
-        const achievements = this.getAchievements();
-        if (!achievements.find(a => a.id === achievement.id)) {
-            achievements.push(achievement);
-            localStorage.setItem(this.KEYS.ACHIEVEMENTS, JSON.stringify(achievements));
-        }
-        return achievement;
-    },
-
     // メモ管理
     getMemos() {
         const data = localStorage.getItem(this.KEYS.MEMOS);
@@ -295,6 +278,7 @@ const Storage = {
     },
 
     // データ分析用メソッド
+    // 月次統計を拡張
     getMonthlyStats(yearMonth) {
         const [year, month] = yearMonth.split('-').map(Number);
         const startDate = new Date(year, month - 1, 1);
@@ -305,6 +289,19 @@ const Storage = {
             return saleDate >= startDate && saleDate <= endDate;
         });
         
+        const properties = this.getProperties();
+        
+        // 媒介獲得数を計算
+        const mediationCount = properties.filter(property => {
+            if (!property.contractDate) return false;
+            const contractDate = new Date(property.contractDate);
+            return contractDate >= startDate && contractDate <= endDate &&
+                   ['exclusive', 'special', 'general'].includes(property.transactionMode);
+        }).length;
+        
+        // 契約件数（売買の成約数）
+        const contractCount = sales.filter(sale => sale.type === 'realestate').length;
+        
         const stats = {
             totalRevenue: 0,
             dealCount: 0,
@@ -313,7 +310,9 @@ const Storage = {
             otherRevenue: 0,
             realEstateCount: 0,
             renovationCount: 0,
-            otherCount: 0
+            otherCount: 0,
+            contractCount: contractCount,
+            mediationCount: mediationCount
         };
         
         sales.forEach(sale => {
@@ -338,7 +337,20 @@ const Storage = {
         
         return stats;
     },
-
+    // 月次媒介獲得物件を取得
+    getMonthlyMediationProperties(yearMonth) {
+        const [year, month] = yearMonth.split('-').map(Number);
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0, 23, 59, 59);
+        
+        return this.getProperties().filter(property => {
+            if (!property.contractDate) return false;
+            const contractDate = new Date(property.contractDate);
+            return contractDate >= startDate && contractDate <= endDate &&
+                   ['exclusive', 'special', 'general'].includes(property.transactionMode);
+        }).sort((a, b) => new Date(b.contractDate) - new Date(a.contractDate));
+    },
+    
     getPropertyStats() {
         const properties = this.getProperties();
         const stats = {
@@ -504,7 +516,6 @@ const Storage = {
             settings: this.getSettings(),
             notifications: this.getNotifications(),
             goals: this.getGoals(),
-            achievements: this.getAchievements(),
             memos: this.getMemos(),
             todos: this.getTodos(),
             exportDate: new Date().toISOString(),
@@ -528,9 +539,6 @@ const Storage = {
             }
             if (data.goals) {
                 localStorage.setItem(this.KEYS.GOALS, JSON.stringify(data.goals));
-            }
-            if (data.achievements) {
-                localStorage.setItem(this.KEYS.ACHIEVEMENTS, JSON.stringify(data.achievements));
             }
             if (data.memos) {
                 localStorage.setItem(this.KEYS.MEMOS, JSON.stringify(data.memos));
