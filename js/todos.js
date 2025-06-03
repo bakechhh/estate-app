@@ -285,4 +285,62 @@ const Todos = {
                     </div>
                     <div class="modal-actions">
                         <button type="submit" class="primary-btn">${todo ? '更新' : '追加'}</button>
-                        <button type="button" class
+                        <button type="button" class="secondary-btn" onclick="this.closest('.modal').remove()">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+        
+        document.body.appendChild(modal);
+        
+        // フォームサブミット
+        document.getElementById('todo-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('todo-title').value;
+            const description = document.getElementById('todo-description').value;
+            const dueDate = document.getElementById('todo-due-date').value;
+            const priority = document.getElementById('todo-priority').value;
+            const category = document.getElementById('todo-category').value;
+            const repeat = document.getElementById('todo-repeat').value;
+            
+            if (todo) {
+                this.updateTodo(todo.id, {
+                    title,
+                    description,
+                    dueDate,
+                    priority,
+                    category,
+                    repeat
+                });
+            } else {
+                this.saveTodo(title, description, dueDate, priority, category, repeat);
+            }
+            
+            modal.remove();
+        });
+    },
+    
+    showTodoCompleteAnimation() {
+        const animation = document.createElement('div');
+        animation.className = 'todo-complete-animation';
+        animation.innerHTML = '✅';
+        document.body.appendChild(animation);
+        
+        setTimeout(() => animation.remove(), 1000);
+    },
+    
+    loadTodos() {
+        this.renderTodoWidget();
+    },
+    
+    showTodoDetail(todoId) {
+        this.showTodoModal(todoId);
+    }
+};
+// グローバルスコープに公開
+window.Todos = Todos;
