@@ -3,7 +3,6 @@ const Goals = {
     init() {
         this.setupEventListeners();
         this.loadCurrentGoals();
-        this.checkAchievements();
     },
 
     setupEventListeners() {
