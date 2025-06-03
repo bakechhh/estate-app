@@ -92,254 +92,279 @@ const Storage = {
         sales.unshift(sale);
         localStorage.setItem(this.KEYS.SALES, JSON.stringify(sales));
         
-        // 物件のステータス更新（売買の場合）
-        if (sale.type === 'realestate' && sale.propertyId) {
-            this.updateProperty(sale.propertyId, { status: 'completed' });
-        }
-        
         return sale;
     },
 
     updateSale(id, updates) {
         const sales = this.getSales();
         const index = sales.findIndex(s => s.id === id);
-        
-        if (index !== -1) {
-            sales[index] = { 
-                ...sales[index], 
-                ...updates,
-                updatedAt: new Date().toISOString()
-            };
-            localStorage.setItem(this.KEYS.SALES, JSON.stringify(sales));
-            return sales[index];
-        }
-        return null;
-    },
+       
+       if (index !== -1) {
+           sales[index] = { 
+               ...sales[index], 
+               ...updates,
+               updatedAt: new Date().toISOString()
+           };
+           localStorage.setItem(this.KEYS.SALES, JSON.stringify(sales));
+           return sales[index];
+       }
+       return null;
+   },
 
-    deleteSale(id) {
-        const sales = this.getSales();
-        const filtered = sales.filter(s => s.id !== id);
-        localStorage.setItem(this.KEYS.SALES, JSON.stringify(filtered));
-        return true;
-    },
+   deleteSale(id) {
+       const sales = this.getSales();
+       const filtered = sales.filter(s => s.id !== id);
+       localStorage.setItem(this.KEYS.SALES, JSON.stringify(filtered));
+       return true;
+   },
 
-    // 通知データ
-    getNotifications() {
-        const data = localStorage.getItem(this.KEYS.NOTIFICATIONS);
-        return data ? JSON.parse(data) : [];
-    },
+   // 通知データ
+   getNotifications() {
+       const data = localStorage.getItem(this.KEYS.NOTIFICATIONS);
+       return data ? JSON.parse(data) : [];
+   },
 
-    saveNotification(notification) {
-        const notifications = this.getNotifications();
-        notification.id = Date.now().toString();
-        notification.createdAt = new Date().toISOString();
-        notification.read = false;
-        notifications.unshift(notification);
-        
-        // 最大100件まで保持
-        if (notifications.length > 100) {
-            notifications.splice(100);
-        }
-        
-        localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify(notifications));
-        return notification;
-    },
+   saveNotification(notification) {
+       const notifications = this.getNotifications();
+       notification.id = Date.now().toString();
+       notification.createdAt = new Date().toISOString();
+       notification.read = false;
+       notifications.unshift(notification);
+       
+       // 最大100件まで保持
+       if (notifications.length > 100) {
+           notifications.splice(100);
+       }
+       
+       localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+       return notification;
+   },
 
-    markNotificationAsRead(id) {
-        const notifications = this.getNotifications();
-        const notification = notifications.find(n => n.id === id);
-        
-        if (notification) {
-            notification.read = true;
-            localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify(notifications));
-        }
-    },
+   markNotificationAsRead(id) {
+       const notifications = this.getNotifications();
+       const notification = notifications.find(n => n.id === id);
+       
+       if (notification) {
+           notification.read = true;
+           localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+       }
+   },
 
-    clearNotifications() {
-        localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify([]));
-    },
+   clearNotifications() {
+       localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify([]));
+   },
 
-    // 設定
-    getSettings() {
-        const data = localStorage.getItem(this.KEYS.SETTINGS);
-        return data ? JSON.parse(data) : {
-            defaultTaxRate: 10,
-            notificationDays: 30,
-            enableBrowserNotification: false
-        };
-    },
+   // 設定
+   getSettings() {
+       const data = localStorage.getItem(this.KEYS.SETTINGS);
+       return data ? JSON.parse(data) : {
+           defaultTaxRate: 10,
+           notificationDays: 30,
+           enableBrowserNotification: false
+       };
+   },
 
-    saveSettings(settings) {
-        localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(settings));
-        return settings;
-    },
+   saveSettings(settings) {
+       localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(settings));
+       return settings;
+   },
 
-    // テーマ
-    getTheme() {
-        return localStorage.getItem(this.KEYS.THEME) || 'light';
-    },
+   // テーマ
+   getTheme() {
+       return localStorage.getItem(this.KEYS.THEME) || 'light';
+   },
 
-    setTheme(theme) {
-        localStorage.setItem(this.KEYS.THEME, theme);
-        return theme;
-    },
+   setTheme(theme) {
+       localStorage.setItem(this.KEYS.THEME, theme);
+       return theme;
+   },
 
-    // データ分析用メソッド
-    getMonthlyStats(yearMonth) {
-        const [year, month] = yearMonth.split('-').map(Number);
-        const startDate = new Date(year, month - 1, 1);
-        const endDate = new Date(year, month, 0, 23, 59, 59);
-        
-        const sales = this.getSales().filter(sale => {
-            const saleDate = new Date(sale.date);
-            return saleDate >= startDate && saleDate <= endDate;
-        });
-        
-        const stats = {
-            totalRevenue: 0,
-            dealCount: 0,
-            realEstateRevenue: 0,
-            renovationRevenue: 0,
-            otherRevenue: 0,
-            realEstateCount: 0,
-            renovationCount: 0,
-            otherCount: 0
-        };
-        
-        sales.forEach(sale => {
-            stats.totalRevenue += sale.profit || 0;
-            stats.dealCount++;
-            
-            switch (sale.type) {
-                case 'realestate':
-                    stats.realEstateRevenue += sale.profit || 0;
-                    stats.realEstateCount++;
-                    break;
-                case 'renovation':
-                    stats.renovationRevenue += sale.profit || 0;
-                    stats.renovationCount++;
-                    break;
-                case 'other':
-                    stats.otherRevenue += sale.amount || 0;
-                    stats.otherCount++;
-                    break;
-            }
-        });
-        
-        return stats;
-    },
+   // データ分析用メソッド
+   getMonthlyStats(yearMonth) {
+       const [year, month] = yearMonth.split('-').map(Number);
+       const startDate = new Date(year, month - 1, 1);
+       const endDate = new Date(year, month, 0, 23, 59, 59);
+       
+       const sales = this.getSales().filter(sale => {
+           const saleDate = new Date(sale.date);
+           return saleDate >= startDate && saleDate <= endDate;
+       });
+       
+       const stats = {
+           totalRevenue: 0,
+           dealCount: 0,
+           realEstateRevenue: 0,
+           renovationRevenue: 0,
+           otherRevenue: 0,
+           realEstateCount: 0,
+           renovationCount: 0,
+           otherCount: 0
+       };
+       
+       sales.forEach(sale => {
+           stats.totalRevenue += sale.profit || 0;
+           stats.dealCount++;
+           
+           switch (sale.type) {
+               case 'realestate':
+                   stats.realEstateRevenue += sale.profit || 0;
+                   stats.realEstateCount++;
+                   break;
+               case 'renovation':
+                   stats.renovationRevenue += sale.profit || 0;
+                   stats.renovationCount++;
+                   break;
+               case 'other':
+                   stats.otherRevenue += sale.amount || 0;
+                   stats.otherCount++;
+                   break;
+           }
+       });
+       
+       return stats;
+   },
 
-    getPropertyStats() {
-        const properties = this.getProperties();
-        const stats = {
-            total: properties.length,
-            active: 0,
-            negotiating: 0,
-            contracted: 0,
-            completed: 0,
-            totalValue: 0
-        };
-        
-        properties.forEach(property => {
-            stats[property.status]++;
-            if (property.status === 'active' || property.status === 'negotiating') {
-                stats.totalValue += property.sellingPrice || 0;
-            }
-        });
-        
-        return stats;
-    },
+   getPropertyStats() {
+       const properties = this.getProperties();
+       const stats = {
+           total: properties.length,
+           active: 0,
+           negotiating: 0,
+           contracted: 0,
+           completed: 0,
+           totalValue: 0,
+           activeCount: 0,
+           sellerCount: 0,
+           exclusiveCount: 0,
+           generalCount: 0,
+           otherModeCount: 0,
+           sellerValue: 0
+       };
+       
+       properties.forEach(property => {
+           stats[property.status]++;
+           
+           // アクティブな物件の統計
+           if (property.status === 'active' || property.status === 'negotiating') {
+               stats.activeCount++;
+               stats.totalValue += property.sellingPrice || 0;
+               
+               // 取引様態ごとの統計
+               switch (property.transactionMode) {
+                   case 'seller':
+                       stats.sellerCount++;
+                       stats.sellerValue += property.sellingPrice || 0;
+                       break;
+                   case 'exclusive':
+                   case 'special':
+                       stats.exclusiveCount++;
+                       break;
+                   case 'general':
+                       stats.generalCount++;
+                       break;
+                   default:
+                       stats.otherModeCount++;
+                       break;
+               }
+           }
+       });
+       
+       return stats;
+   },
 
-    getUpcomingDeadlines(days = 30) {
-        const properties = this.getProperties();
-        const now = new Date();
-        const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-        const deadlines = [];
-        
-        properties.forEach(property => {
-            if (property.contractEndDate && 
-                (property.status === 'active' || property.status === 'negotiating')) {
-                const endDate = new Date(property.contractEndDate);
-                
-                if (endDate >= now && endDate <= futureDate) {
-                    const daysRemaining = Math.ceil((endDate - now) / (24 * 60 * 60 * 1000));
-                    deadlines.push({
-                        property,
-                        type: 'contract',
-                        message: `媒介契約満了まで${daysRemaining}日`,
-                        daysRemaining,
-                        urgent: daysRemaining <= 7
-                    });
-                }
-            }
-            
-            // レインズ更新期限のチェック（専任媒介は7日、専属専任は5日）
-            if (property.reinsDate && property.transactionMode && 
-                (property.status === 'active' || property.status === 'negotiating')) {
-                const updateDays = property.transactionMode === 'exclusive' ? 5 : 7;
-                const lastUpdate = new Date(property.reinsDate);
-                const nextUpdate = new Date(lastUpdate.getTime() + updateDays * 24 * 60 * 60 * 1000);
-                
-                if (nextUpdate >= now && nextUpdate <= futureDate) {
-                    const daysRemaining = Math.ceil((nextUpdate - now) / (24 * 60 * 60 * 1000));
-                    deadlines.push({
-                        property,
-                        type: 'reins',
-                        message: `レインズ更新期限まで${daysRemaining}日`,
-                        daysRemaining,
-                        urgent: daysRemaining <= 2
-                    });
-                }
-            }
-        });
-        
-        return deadlines.sort((a, b) => a.daysRemaining - b.daysRemaining);
-    },
+   getUpcomingDeadlines(days = 30) {
+       const properties = this.getProperties();
+       const now = new Date();
+       const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+       const deadlines = [];
+       
+       properties.forEach(property => {
+           if (property.contractEndDate && 
+               (property.status === 'active' || property.status === 'negotiating')) {
+               const endDate = new Date(property.contractEndDate);
+               
+               if (endDate >= now && endDate <= futureDate) {
+                   const daysRemaining = Math.ceil((endDate - now) / (24 * 60 * 60 * 1000));
+                   deadlines.push({
+                       property,
+                       type: 'contract',
+                       message: `媒介契約満了まで${daysRemaining}日`,
+                       daysRemaining,
+                       urgent: daysRemaining <= 7
+                   });
+               }
+           }
+           
+           // レインズ更新期限のチェック（専任媒介は7日、専属専任は5日）
+           if (property.reinsDate && property.transactionMode && 
+               (property.status === 'active' || property.status === 'negotiating')) {
+               const updateDays = property.transactionMode === 'exclusive' ? 5 : 7;
+               const lastUpdate = new Date(property.reinsDate);
+               const nextUpdate = new Date(lastUpdate.getTime() + updateDays * 24 * 60 * 60 * 1000);
+               
+               if (nextUpdate >= now && nextUpdate <= futureDate) {
+                   const daysRemaining = Math.ceil((nextUpdate - now) / (24 * 60 * 60 * 1000));
+                   deadlines.push({
+                       property,
+                       type: 'reins',
+                       message: `レインズ更新期限まで${daysRemaining}日`,
+                       daysRemaining,
+                       urgent: daysRemaining <= 2
+                   });
+               }
+           }
+       });
+       
+       return deadlines.sort((a, b) => a.daysRemaining - b.daysRemaining);
+   },
 
-    // エクスポート/インポート
-    exportData() {
-        return {
-            properties: this.getProperties(),
-            sales: this.getSales(),
-            settings: this.getSettings(),
-            notifications: this.getNotifications(),
-            exportDate: new Date().toISOString(),
-            version: '1.0'
-        };
-    },
+   // エクスポート/インポート
+   exportData() {
+       return {
+           properties: this.getProperties(),
+           sales: this.getSales(),
+           settings: this.getSettings(),
+           notifications: this.getNotifications(),
+           exportDate: new Date().toISOString(),
+           version: '1.0'
+       };
+   },
 
-    importData(data) {
-        try {
-            if (data.properties) {
-                localStorage.setItem(this.KEYS.PROPERTIES, JSON.stringify(data.properties));
-            }
-            if (data.sales) {
-                localStorage.setItem(this.KEYS.SALES, JSON.stringify(data.sales));
-            }
-            if (data.settings) {
-                localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(data.settings));
-            }
-            if (data.notifications) {
-                localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify(data.notifications));
-            }
-            return true;
-        } catch (error) {
-            console.error('Import error:', error);
-            return false;
-        }
-    },
+   importData(data) {
+       try {
+           if (data.properties) {
+               localStorage.setItem(this.KEYS.PROPERTIES, JSON.stringify(data.properties));
+           }
+           if (data.sales) {
+               localStorage.setItem(this.KEYS.SALES, JSON.stringify(data.sales));
+           }
+           if (data.settings) {
+               localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(data.settings));
+           }
+           if (data.notifications) {
+               localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify(data.notifications));
+           }
+           return true;
+       } catch (error) {
+           console.error('Import error:', error);
+           return false;
+       }
+   },
 
-    // データクリア
-    clearAllData() {
-        const theme = this.getTheme();
-        
-        // テーマ以外をクリア
-        Object.keys(this.KEYS).forEach(key => {
-            if (key !== 'THEME') {
-                localStorage.removeItem(this.KEYS[key]);
-            }
-        });
-        
-        return true;
-    }
+   // データクリア
+   clearAllData() {
+       const theme = this.getTheme();
+       
+       // テーマ以外をクリア
+       Object.keys(this.KEYS).forEach(key => {
+           if (key !== 'THEME') {
+               localStorage.removeItem(this.KEYS[key]);
+           }
+       });
+       
+       return true;
+   }
 };
+
+// グローバルスコープに公開
+window.Storage = Storage;
