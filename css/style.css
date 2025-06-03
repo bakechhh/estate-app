@@ -1000,3 +1000,65 @@ textarea {
         padding: 1rem;
     }
 }
+/* 物件選択と直接入力のスタイル */
+#property-name-input {
+    border-color: var(--info-color);
+}
+
+#property-name-input:not(:placeholder-shown) ~ * #sale-property {
+    opacity: 0.6;
+}
+
+/* フォームグループの説明文 */
+.form-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+/* 選択と入力の切り替え表示 */
+.form-group.or-divider {
+    position: relative;
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.form-group.or-divider::before {
+    content: "または";
+    background: var(--bg-primary);
+    padding: 0 1rem;
+    position: relative;
+    z-index: 1;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.form-group.or-divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-color);
+    z-index: 0;
+}
+
+/* 仕入価格フィールド */
+#purchase-price-field {
+    background-color: rgba(234, 67, 53, 0.05);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+}
+
+/* 相互排他的な入力フィールドの視覚的フィードバック */
+#sale-property:not(:invalid):not([value=""]) ~ * #property-name-input {
+    background-color: var(--bg-secondary);
+    opacity: 0.7;
+}
+
+#property-name-input:not(:placeholder-shown) ~ * #sale-property {
+    background-color: var(--bg-secondary);
+    opacity: 0.7;
+}
