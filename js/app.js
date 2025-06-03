@@ -66,6 +66,7 @@ const EstateApp = {
                 switch (targetTab) {
                     case 'dashboard':
                         Dashboard.refresh();
+                        Calendar.render();
                         break;
                     case 'inventory':
                         Inventory.renderPropertyList();
@@ -74,7 +75,7 @@ const EstateApp = {
                         Sales.updatePropertySelect();
                         break;
                     case 'reports':
-                        // レポートタブの初期化は必要に応じて
+                        Reports.initCharts();
                         break;
                 }
             });
@@ -94,9 +95,9 @@ const EstateApp = {
             Storage.saveSettings(settings);
         });
         
-        document.getElementById('default-commission').addEventListener('change', (e) => {
+        document.getElementById('default-tax-rate').addEventListener('change', (e) => {
             const settings = Storage.getSettings();
-            settings.defaultCommissionRate = parseFloat(e.target.value);
+            settings.defaultTaxRate = parseInt(e.target.value);
             Storage.saveSettings(settings);
         });
         
@@ -113,7 +114,7 @@ const EstateApp = {
         // 設定の読み込み
         const settings = Storage.getSettings();
         document.getElementById('notification-days').value = settings.notificationDays;
-        document.getElementById('default-commission').value = settings.defaultCommissionRate;
+        document.getElementById('default-tax-rate').value = settings.defaultTaxRate;
         document.getElementById('enable-browser-notification').checked = settings.enableBrowserNotification;
     },
 
