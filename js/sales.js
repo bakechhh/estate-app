@@ -365,10 +365,11 @@ const Sales = {
        
        EstateApp.showToast('売上を登録しました');
        
-       // ダッシュボードを更新
-       if (EstateApp.currentTab === 'dashboard') {
-           Dashboard.refresh();
-       }
+      // 画面を更新
+      Dashboard.refresh();
+      if (typeof Calendar !== 'undefined') {
+          Calendar.render();
+      }
    },
 
    saveRenovationSale() {
@@ -406,10 +407,11 @@ const Sales = {
        
        EstateApp.showToast('リフォーム売上を登録しました');
        
-       // ダッシュボードを更新
-       if (EstateApp.currentTab === 'dashboard') {
-           Dashboard.refresh();
-       }
+      // 画面を更新
+      Dashboard.refresh();
+      if (typeof Calendar !== 'undefined') {
+          Calendar.render();
+      }
    },
 
    saveOtherSale() {
@@ -444,10 +446,11 @@ const Sales = {
        
        EstateApp.showToast('売上を登録しました');
        
-       // ダッシュボードを更新
-       if (EstateApp.currentTab === 'dashboard') {
-           Dashboard.refresh();
-       }
+       // 画面を更新
+      Dashboard.refresh();
+      if (typeof Calendar !== 'undefined') {
+          Calendar.render();
+      }
    }
 };
 
