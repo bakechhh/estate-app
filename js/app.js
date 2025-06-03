@@ -13,6 +13,7 @@ const EstateApp = {
         Dashboard.init();
         Inventory.init();
         Sales.init();
+        Transactions.init();
         Reports.init();
         Export.init();
         Notifications.init();
@@ -74,8 +75,11 @@ const EstateApp = {
                     case 'sales':
                         Sales.updatePropertySelect();
                         break;
+                    case 'transactions':
+                        Transactions.renderTransactionList();
+                        break;
                     case 'reports':
-                        Reports.initCharts();
+                        // 必要に応じて初期化
                         break;
                 }
             });
