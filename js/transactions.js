@@ -67,6 +67,12 @@ const Transactions = {
                         </div>
                     </div>
                     <div class="transaction-details">
+                        ${sale.saleNumber ? `
+                            <div class="detail-item">
+                                <span class="detail-label">売上番号：</span>
+                                <span class="detail-value">${sale.saleNumber}</span>
+                            </div>
+                        ` : ''}
                         <div class="detail-item">
                             <span class="detail-label">顧客名：</span>
                             <span class="detail-value">${sale.customerName}</span>
@@ -76,6 +82,22 @@ const Transactions = {
                                 <span class="detail-label">成約価格：</span>
                                 <span class="detail-value">${EstateApp.formatCurrency(sale.salePrice)}</span>
                             </div>
+                            <div class="detail-item">
+                                <span class="detail-label">決済期日：</span>
+                                <span class="detail-value">${EstateApp.formatDate(sale.settlementDate)}</span>
+                            </div>
+                            ${sale.loanConditionDate ? `
+                                <div class="detail-item">
+                                    <span class="detail-label">融資特約期日：</span>
+                                    <span class="detail-value">${EstateApp.formatDate(sale.loanConditionDate)}</span>
+                                </div>
+                            ` : ''}
+                            ${sale.collectionDate ? `
+                                <div class="detail-item">
+                                    <span class="detail-label">回収日：</span>
+                                    <span class="detail-value">${EstateApp.formatDate(sale.collectionDate)}</span>
+                                </div>
+                            ` : ''}
                         ` : ''}
                         ${sale.notes || sale.content || sale.description ? `
                             <div class="detail-item full-width">
@@ -159,7 +181,26 @@ const Transactions = {
         const sale = Storage.getSales().find(s => s.id === saleId);
         if (sale) {
             const newStatus = sale.collectionStatus === 'collected' ? 'pending' : 'collected';
-            Storage.updateSale(saleId, { collectionStatus: newStatus });
+            const updates = { collectionStatus: newStatus };
+            
+            // 回収済みにする場合は今日の日付を回収日として設定
+            if (newStatus === 'collected') {
+                updates.collectionDate = new Date().toISOString().split('T')[0];
+                
+                // 物件のステータスを取引完了に更新
+                if (sale.propertyId) {
+                    Storage.updateProperty(sale.propertyId, { status: 'completed' });
+                }
+            } else {
+                updates.collectionDate = null;
+                
+                // 物件のステータスを契約済みに戻す
+                if (sale.propertyId) {
+                    Storage.updateProperty(sale.propertyId, { status: 'contracted' });
+                }
+            }
+            
+            Storage.updateSale(saleId, updates);
             this.renderTransactionList();
             
             EstateApp.showToast(newStatus === 'collected' ? '回収済みに更新しました' : '未回収に更新しました');
