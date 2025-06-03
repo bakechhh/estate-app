@@ -115,7 +115,7 @@ const Inventory = {
         } else {
             title.textContent = '新規物件登録';
             form.reset();
-            document.getElementById('property-code').value = '自動採番';
+            document.getElementById('property-code').value = '';
             document.getElementById('property-status').value = 'active';
         }
         
@@ -124,6 +124,7 @@ const Inventory = {
 
     saveProperty() {
         const formData = {
+            code: document.getElementById('property-code').value,
             name: document.getElementById('property-name').value,
             type: document.getElementById('property-type').value,
             status: document.getElementById('property-status').value,
