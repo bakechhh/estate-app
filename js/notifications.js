@@ -61,15 +61,27 @@ const Notifications = {
         const notifications = Storage.getNotifications();
         const notification = notifications.find(n => n.id === notificationId);
         
-        if (notification && notification.propertyId) {
-            // 物件詳細を表示
+        if (notification) {
+            // 通知パネルを閉じる
             this.togglePanel();
-            document.querySelector('[data-tab="inventory"]').click();
             
-            // 少し待ってから物件詳細を開く
-            setTimeout(() => {
-                Inventory.showPropertyDetail(notification.propertyId);
-            }, 100);
+            if (notification.propertyId) {
+                // 物件詳細を表示
+                document.querySelector('[data-tab="inventory"]').click();
+                
+                // 少し待ってから物件詳細を開く
+                setTimeout(() => {
+                    Inventory.showPropertyDetail(notification.propertyId);
+                }, 100);
+            } else if (notification.saleId) {
+                // 取引詳細を表示
+                document.querySelector('[data-tab="transactions"]').click();
+                
+                // 少し待ってから取引詳細を開く（編集モーダル）
+                setTimeout(() => {
+                    Transactions.editTransaction(notification.saleId);
+                }, 100);
+            }
         }
         
         // 通知を再表示
@@ -88,7 +100,10 @@ const Notifications = {
     getNotificationTypeText(type) {
         const typeMap = {
             contract: '契約期限',
-            reins: 'レインズ更新'
+            reins: 'レインズ更新',
+            'reins-deadline': 'レインズ登録期日',
+            settlement: '決済期日',
+            'loan-condition': '融資特約期日'
         };
         return typeMap[type] || type;
     },
