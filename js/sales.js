@@ -263,6 +263,7 @@ const Sales = {
         const propertyId = document.getElementById('sale-property').value;
         const property = propertyId ? Storage.getProperty(propertyId) : null;
         const propertyName = property?.name || document.getElementById('property-name-input').value;
+        const dealName = document.getElementById('deal-name').value;
         const transactionType = document.getElementById('transaction-type').value;
         const salePrice = parseInt(document.getElementById('sale-price').value);
         const otherExpenses = parseInt(document.getElementById('other-expenses').value) || 0;
@@ -301,6 +302,7 @@ const Sales = {
         
         const sale = {
             type: 'realestate',
+            dealName,  // 案件名
             propertyId,
             propertyName,
             date: document.getElementById('sale-date').value,
@@ -313,7 +315,8 @@ const Sales = {
             profit,
             customerName: document.getElementById('customer-name').value,
             notes: document.getElementById('sale-notes').value,
-            excludingTax: true // 税抜きフラグ
+            excludingTax: true, // 税抜きフラグ
+            collectionStatus: 'pending' // 回収状況（デフォルト：未回収）
         };
         
         Storage.saveSale(sale);
@@ -325,6 +328,7 @@ const Sales = {
         
         // フォームリセット
         document.getElementById('realestate-form').reset();
+        document.getElementById('deal-name').value = '';
         document.getElementById('property-name-input').value = '';
         document.getElementById('purchase-price-input').value = '';
         this.loadDefaults();
@@ -345,19 +349,22 @@ const Sales = {
     },
 
     saveRenovationSale() {
+        const dealName = document.getElementById('reno-deal-name').value;
         const cost = parseInt(document.getElementById('reno-cost').value);
         const price = parseInt(document.getElementById('reno-price').value);
         const profit = price - cost;
         
         const sale = {
             type: 'renovation',
+            dealName,  // 案件名
             propertyName: document.getElementById('reno-property-name').value,
             date: document.getElementById('reno-date').value,
             content: document.getElementById('reno-content').value,
             cost,
             price,
             profit,
-            contractor: document.getElementById('reno-contractor').value
+            contractor: document.getElementById('reno-contractor').value,
+            collectionStatus: 'pending' // 回収状況（デフォルト：未回収）
         };
         
         Storage.saveSale(sale);
@@ -381,16 +388,19 @@ const Sales = {
     },
 
     saveOtherSale() {
+        const dealName = document.getElementById('other-deal-name').value;
         const amount = parseInt(document.getElementById('other-amount').value);
         
         const sale = {
             type: 'other',
+            dealName,  // 案件名
             subType: document.getElementById('other-type').value,
             date: document.getElementById('other-date').value,
             amount: amount,
             customerName: document.getElementById('other-customer').value,
             description: document.getElementById('other-description').value,
-            profit: amount // その他は全額を利益とする
+            profit: amount, // その他は全額を利益とする
+            collectionStatus: 'pending' // 回収状況（デフォルト：未回収）
         };
         
         Storage.saveSale(sale);
