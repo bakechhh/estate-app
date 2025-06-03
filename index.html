@@ -135,11 +135,15 @@
                             <select id="sale-property">
                                 <option value="">物件を選択してください</option>
                             </select>
+                            <div class="form-hint">登録済み物件から選択できます</div>
                         </div>
+            
+                        <div class="form-group or-divider"></div>
             
                         <div class="form-group">
                             <label for="property-name-input">物件名（直接入力）</label>
                             <input type="text" id="property-name-input" placeholder="物件選択しない場合は入力">
+                            <div class="form-hint">新規物件や未登録物件の場合はこちらに入力</div>
                         </div>
             
                         <div class="form-group">
@@ -173,8 +177,8 @@
                         <div id="commission-fields" style="display: none;">
                             <div class="form-group">
                                 <label for="commission-type">仲介手数料</label>
-                                <select id="commission-type" required>
-                                    <option value="standard" selected>正規手数料（800万円以下は33万円）</option>
+                                <select id="commission-type">
+                                    <option value="standard" selected>正規手数料</option>
                                     <option value="fixed">33万円固定（税込）</option>
                                     <option value="direct">直接入力</option>
                                 </select>
@@ -227,7 +231,7 @@
                         <button type="submit" class="primary-btn">売上登録</button>
                     </form>
                 </div>
-
+            
                 <!-- リフォームサブタブ -->
                 <div id="renovation-subtab" class="sub-tab-content">
                     <form id="renovation-form" class="sales-form">
@@ -235,32 +239,32 @@
                             <label for="reno-property-name">物件名/顧客名</label>
                             <input type="text" id="reno-property-name" required>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="reno-date">施工完了日</label>
                             <input type="date" id="reno-date" required>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="reno-content">リフォーム内容</label>
                             <textarea id="reno-content" rows="3" required></textarea>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="reno-cost">原価（円）</label>
                             <input type="number" id="reno-cost" required min="0">
                         </div>
-
+            
                         <div class="form-group">
                             <label for="reno-price">請求金額（円）</label>
                             <input type="number" id="reno-price" required min="0">
                         </div>
-
+            
                         <div class="form-group">
                             <label for="reno-contractor">施工業者</label>
                             <input type="text" id="reno-contractor">
                         </div>
-
+            
                         <div class="result-box">
                             <h3>利益計算</h3>
                             <div class="result-item">
@@ -280,11 +284,11 @@
                                 <span id="reno-result-rate">0%</span>
                             </div>
                         </div>
-
+            
                         <button type="submit" class="primary-btn">売上登録</button>
                     </form>
                 </div>
-
+            
                 <!-- その他サブタブ -->
                 <div id="other-subtab" class="sub-tab-content">
                     <form id="other-form" class="sales-form">
@@ -298,27 +302,27 @@
                                 <option value="other">その他</option>
                             </select>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="other-date">発生日</label>
                             <input type="date" id="other-date" required>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="other-amount">金額（円）</label>
                             <input type="number" id="other-amount" required min="0">
                         </div>
-
+            
                         <div class="form-group">
                             <label for="other-customer">顧客名/案件名</label>
                             <input type="text" id="other-customer" required>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="other-description">内容詳細</label>
                             <textarea id="other-description" rows="4" required></textarea>
                         </div>
-
+            
                         <button type="submit" class="primary-btn">売上登録</button>
                     </form>
                 </div>
