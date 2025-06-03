@@ -176,9 +176,18 @@ const EstateApp = {
         }
     },
 
-    requestNotificationPermission() {
+    async requestNotificationPermission() {
         if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    EstateApp.showToast('ブラウザ通知を有効にしました');
+                } else {
+                    EstateApp.showToast('ブラウザ通知が拒否されました', 'danger');
+                }
+            } catch (error) {
+                console.error('Notification permission error:', error);
+            }
         }
     },
 
