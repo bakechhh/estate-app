@@ -60,78 +60,19 @@ const Goals = {
         }
     },
     
-    setGoal(type, period, targetAmount, targetCount) {
+    setGoal(type, period, targetAmount, targetContracts, targetMediations) {
         const goal = {
             id: Date.now().toString(),
-            type, // 'monthly' or 'yearly'
-            period, // '2024-01' for monthly, '2024' for yearly
+            type,
+            period,
             targetAmount,
-            targetCount,
+            targetContracts,
+            targetMediations,
             createdAt: new Date().toISOString()
         };
         
         Storage.saveGoal(goal);
-        this.loadCurrentGoals();
         EstateApp.showToast('目標を設定しました');
-    },
-
-    checkAchievements() {
-        const achievements = Storage.getAchievements();
-        const sales = Storage.getSales();
-        
-        // 実績チェックロジック
-        const newAchievements = [];
-        
-        // 初回成約
-        if (sales.length === 1 && !achievements.find(a => a.id === 'first_sale')) {
-            newAchievements.push({
-                id: 'first_sale',
-                name: '初めての一歩',
-                description: '初めての成約を達成',
-                icon: '🎯',
-                unlockedAt: new Date().toISOString()
-            });
-        }
-        
-        // 月間10件達成
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        const monthlyStats = Storage.getMonthlyStats(currentMonth);
-        if (monthlyStats.dealCount >= 10 && !achievements.find(a => a.id === `monthly_10_${currentMonth}`)) {
-            newAchievements.push({
-                id: `monthly_10_${currentMonth}`,
-                name: '月間マスター',
-                description: '月間10件の成約を達成',
-                icon: '🏆',
-                unlockedAt: new Date().toISOString()
-            });
-        }
-        
-        // 新しい実績があれば保存して表示
-        newAchievements.forEach(achievement => {
-            Storage.saveAchievement(achievement);
-            this.showAchievementUnlock(achievement);
-        });
-    },
-
-    showAchievementUnlock(achievement) {
-        const modal = document.createElement('div');
-        modal.className = 'achievement-unlock-modal';
-        modal.innerHTML = `
-            <div class="achievement-unlock-content">
-                <div class="achievement-icon">${achievement.icon}</div>
-                <h2>実績解除！</h2>
-                <h3>${achievement.name}</h3>
-                <p>${achievement.description}</p>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // アニメーション後に削除
-        setTimeout(() => {
-            modal.classList.add('fade-out');
-            setTimeout(() => modal.remove(), 500);
-        }, 3000);
     },
 
     showEnhancedSuccessAnimation(sale) {
@@ -154,8 +95,6 @@ const Goals = {
         
         document.body.appendChild(celebration);
         
-        // 効果音を再生（音声ファイルが必要）
-        // this.playSuccessSound();
         
         setTimeout(() => {
             celebration.classList.add('fade-out');
@@ -185,9 +124,15 @@ const Goals = {
                                placeholder="例：5000000">
                     </div>
                     <div class="form-group">
-                        <label for="goal-count">目標成約件数</label>
-                        <input type="number" id="goal-count" min="0" 
-                               value="${currentGoal?.targetCount || ''}" 
+                        <label for="goal-contracts">目標契約件数</label>
+                        <input type="number" id="goal-contracts" min="0" 
+                               value="${currentGoal?.targetContracts || ''}" 
+                               placeholder="例：5">
+                    </div>
+                    <div class="form-group">
+                        <label for="goal-mediations">目標媒介獲得数</label>
+                        <input type="number" id="goal-mediations" min="0" 
+                               value="${currentGoal?.targetMediations || ''}" 
                                placeholder="例：10">
                     </div>
                     <div class="modal-actions">
@@ -208,63 +153,15 @@ const Goals = {
         document.getElementById('goal-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const amount = parseInt(document.getElementById('goal-amount').value);
-            const count = parseInt(document.getElementById('goal-count').value) || 0;
+            const contracts = parseInt(document.getElementById('goal-contracts').value) || 0;
+            const mediations = parseInt(document.getElementById('goal-mediations').value) || 0;
             
-            this.setGoal('monthly', currentMonth, amount, count);
+            this.setGoal('monthly', currentMonth, amount, contracts, mediations);
             modal.remove();
-            this.loadCurrentGoals();
+            Dashboard.updateGoalProgress();
         });
     },
     
-    showAllAchievements() {
-        const achievements = Storage.getAchievements();
-        const allPossibleAchievements = [
-            { id: 'first_sale', name: '初めての一歩', description: '初めての成約を達成', icon: '🎯', locked: true },
-            { id: 'monthly_10', name: '月間マスター', description: '月間10件の成約を達成', icon: '🏆', locked: true },
-            { id: 'million_deal', name: 'ミリオンセラー', description: '100万円以上の収益を達成', icon: '💰', locked: true },
-            { id: 'perfect_month', name: 'パーフェクト達成', description: '月間目標を100%達成', icon: '⭐', locked: true }
-        ];
-        
-        // 解除済みの実績を更新
-        achievements.forEach(achievement => {
-            const index = allPossibleAchievements.findIndex(a => a.id === achievement.id);
-            if (index !== -1) {
-                allPossibleAchievements[index] = { ...achievement, locked: false };
-            }
-        });
-        
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.style.display = 'flex';
-        
-        modal.innerHTML = `
-            <div class="modal-content modal-large">
-                <h3>🏆 実績一覧</h3>
-                <div class="achievement-grid">
-                    ${allPossibleAchievements.map(achievement => `
-                        <div class="achievement-item ${achievement.locked ? 'locked' : ''}">
-                            <div class="achievement-icon">${achievement.icon}</div>
-                            <div class="achievement-name">${achievement.name}</div>
-                            <div class="achievement-description">${achievement.description}</div>
-                            ${!achievement.locked && achievement.unlockedAt ? 
-                                `<div class="achievement-date">解除日: ${EstateApp.formatDate(achievement.unlockedAt)}</div>` : 
-                                '<div class="achievement-status">未解除</div>'
-                            }
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="modal-actions">
-                    <button class="secondary-btn" onclick="this.closest('.modal').remove()">閉じる</button>
-                </div>
-            </div>
-        `;
-        
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.remove();
-        });
-        
-        document.body.appendChild(modal);
-    },
 
     generateConfetti(count) {
         let confetti = '';
