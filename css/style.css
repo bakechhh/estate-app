@@ -1870,17 +1870,77 @@ textarea {
         font-size: 0.55rem;
     }
 }
-setGoal(type, period, targetAmount, targetContracts, targetMediations) {
-    const goal = {
-        id: Date.now().toString(),
-        type,
-        period,
-        targetAmount,
-        targetContracts,
-        targetMediations,
-        createdAt: new Date().toISOString()
-    };
+/* 目標進捗の改善 */
+.goal-item {
+    margin-bottom: 1rem;
+}
+
+.goal-detail {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    text-align: right;
+}
+
+.current-stats {
+    margin-bottom: 1rem;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* 媒介獲得物件テーブル */
+.mediation-table-container {
+    overflow-x: auto;
+}
+
+.mediation-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.mediation-table th,
+.mediation-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mediation-table th {
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.mediation-table tbody tr:hover {
+    background-color: var(--bg-secondary);
+    cursor: pointer;
+}
+
+.address-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.price-cell {
+    text-align: right;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .mediation-table {
+        font-size: 0.8rem;
+    }
     
-    Storage.saveGoal(goal);
-    EstateApp.showToast('目標を設定しました');
+    .mediation-table th,
+    .mediation-table td {
+        padding: 0.5rem;
+    }
 }
