@@ -26,25 +26,25 @@ const Sales = {
                });
            });
        });
-
+   
        // 売買フォーム
        document.getElementById('realestate-form').addEventListener('submit', (e) => {
            e.preventDefault();
            this.saveRealEstateSale();
        });
-
+   
        // 取引様態による表示切り替え
        document.getElementById('transaction-type').addEventListener('change', (e) => {
            this.updateRealEstateForm(e.target.value);
            this.calculateRealEstateProfit();
        });
-
+   
        // 仲介手数料計算方法の変更
        document.getElementById('commission-type').addEventListener('change', (e) => {
            this.updateCommissionInput(e.target.value);
            this.calculateRealEstateProfit();
        });
-
+   
        // リアルタイム計算（売買）
        ['sale-price', 'purchase-price-input', 'other-expenses', 'commission-amount'].forEach(id => {
            const element = document.getElementById(id);
@@ -58,7 +58,7 @@ const Sales = {
                });
            }
        });
-
+   
        // 物件選択時の処理
        document.getElementById('sale-property').addEventListener('change', (e) => {
            if (e.target.value) {
@@ -77,33 +77,41 @@ const Sales = {
                document.getElementById('property-name-input').value = '';
            }
        });
-
+   
        // 物件名直接入力時は物件選択をクリア
        document.getElementById('property-name-input').addEventListener('input', (e) => {
            if (e.target.value) {
                document.getElementById('sale-property').value = '';
            }
        });
-
+   
+       // すべての物件を表示チェックボックス
+       const showAllPropertiesCheckbox = document.getElementById('show-all-properties');
+       if (showAllPropertiesCheckbox) {
+           showAllPropertiesCheckbox.addEventListener('change', (e) => {
+               this.updatePropertySelect(e.target.checked);
+           });
+       }
+   
        // リフォームフォーム
        document.getElementById('renovation-form').addEventListener('submit', (e) => {
            e.preventDefault();
            this.saveRenovationSale();
        });
-
+   
        // リアルタイム計算（リフォーム）
        ['reno-cost', 'reno-price'].forEach(id => {
            document.getElementById(id).addEventListener('input', () => {
                this.calculateRenovationProfit();
            });
        });
-
+   
        // その他フォーム
        document.getElementById('other-form').addEventListener('submit', (e) => {
            e.preventDefault();
            this.saveOtherSale();
        });
-
+   
        // 今日の日付をデフォルト設定
        const today = new Date().toISOString().split('T')[0];
        document.getElementById('sale-date').value = today;
@@ -119,16 +127,22 @@ const Sales = {
        }
    },
 
-   updatePropertySelect() {
-       const properties = Storage.getProperties().filter(p => 
-           p.status === 'active' || p.status === 'negotiating' || p.status === 'contracted'
-       );
+   updatePropertySelect(showAll = false) {
+       let properties;
+       if (showAll) {
+           properties = Storage.getProperties();
+       } else {
+           // 基本は販売中のみ
+           properties = Storage.getProperties().filter(p => p.status === 'active');
+       }
+       
        const select = document.getElementById('sale-property');
        
        select.innerHTML = '<option value="">物件を選択してください</option>' +
-           properties.map(p => `
-               <option value="${p.id}">${p.name} (${p.code})</option>
-           `).join('');
+           properties.map(p => {
+               const statusText = Inventory.getStatusText(p.status);
+               return `<option value="${p.id}">${p.name} (${p.code}) - ${statusText}</option>`;
+           }).join('');
    },
 
    updateRealEstateForm(transactionType) {
