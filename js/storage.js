@@ -6,7 +6,6 @@ const Storage = {
         SETTINGS: 'estate_settings',
         THEME: 'estate_theme',
         NOTIFICATIONS: 'estate_notifications',
-        LAST_PROPERTY_CODE: 'estate_last_property_code',
         GOALS: 'estate_goals',
         ACHIEVEMENTS: 'estate_achievements',
         MEMOS: 'estate_memos',
@@ -24,7 +23,6 @@ const Storage = {
         
         if (!property.id) {
             property.id = Date.now().toString();
-            property.code = this.generatePropertyCode();
             property.createdAt = new Date().toISOString();
             properties.unshift(property);
         } else {
@@ -65,22 +63,6 @@ const Storage = {
         const filtered = properties.filter(p => p.id !== id);
         localStorage.setItem(this.KEYS.PROPERTIES, JSON.stringify(filtered));
         return true;
-    },
-
-    generatePropertyCode() {
-        let lastCode = localStorage.getItem(this.KEYS.LAST_PROPERTY_CODE);
-        let nextNumber = 1;
-        
-        if (lastCode) {
-            const match = lastCode.match(/(\d+)$/);
-            if (match) {
-                nextNumber = parseInt(match[1]) + 1;
-            }
-        }
-        
-        const newCode = `P${new Date().getFullYear()}${String(nextNumber).padStart(4, '0')}`;
-        localStorage.setItem(this.KEYS.LAST_PROPERTY_CODE, newCode);
-        return newCode;
     },
 
     // 売上データ
