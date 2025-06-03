@@ -1062,3 +1062,122 @@ textarea {
     background-color: var(--bg-secondary);
     opacity: 0.7;
 }
+/* 取引管理 */
+.transactions-header {
+    margin-bottom: 1.5rem;
+}
+
+.transaction-management-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.transaction-card {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.transaction-card:hover {
+    box-shadow: 0 4px 8px var(--shadow);
+}
+
+.transaction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.transaction-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.transaction-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.transaction-type {
+    background-color: var(--bg-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.transaction-status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.transaction-status.collected {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.transaction-status.pending {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.transaction-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.transaction-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.transaction-amount {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.transaction-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* 統計詳細 */
+.stat-detail {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    line-height: 1.3;
+}
+
+/* 回収状況アイコン */
+.collection-status {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.collection-status.collected {
+    color: var(--success-color);
+}
+
+.collection-status.pending {
+    color: var(--warning-color);
+}
+
+/* 案件名入力フィールド */
+#deal-name,
+#reno-deal-name,
+#other-deal-name {
+    border-color: var(--info-color);
+}
