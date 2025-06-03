@@ -215,6 +215,7 @@ const Inventory = {
                     </div>
                     ${this.getDeadlineWarning(property)}
                     <div class="property-actions" onclick="event.stopPropagation()">
+                        <button class="info-btn" onclick="Memos.showMemoModal('property', '${property.id}', '${property.name}')">メモ</button>
                         <button class="secondary-btn" onclick="Inventory.showPropertyModal(${JSON.stringify(property).replace(/"/g, '&quot;')})">編集</button>
                         <button class="danger-btn" onclick="Inventory.deleteProperty('${property.id}')">削除</button>
                     </div>
