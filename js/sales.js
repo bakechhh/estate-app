@@ -46,19 +46,17 @@ const Sales = {
         });
 
         // リアルタイム計算（売買）
-        ['sale-price', 'other-expenses'].forEach(id => {
-            document.getElementById(id).addEventListener('input', () => {
-                // 売却価格が変更されたら、正規手数料の表示も更新
-                if (id === 'sale-price' && document.getElementById('commission-type').value === 'standard') {
-                    this.updateCommissionInput('standard');
-                }
-                this.calculateRealEstateProfit();
-            });
-        });
-
-        // 仲介手数料直接入力時の計算
-        document.getElementById('commission-amount').addEventListener('input', () => {
-            this.calculateRealEstateProfit();
+        ['sale-price', 'purchase-price-input', 'other-expenses', 'commission-amount'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', () => {
+                    // 売却価格が変更されたら、正規手数料の表示も更新
+                    if (id === 'sale-price' && document.getElementById('commission-type').value === 'standard') {
+                        this.updateCommissionInput('standard');
+                    }
+                    this.calculateRealEstateProfit();
+                });
+            }
         });
 
         // 物件選択時の処理
@@ -67,6 +65,11 @@ const Sales = {
                 const property = Storage.getProperty(e.target.value);
                 if (property) {
                     document.getElementById('sale-price').value = property.sellingPrice;
+                    document.getElementById('property-name-input').value = property.name;
+                    // 売主の場合は仕入価格も設定
+                    if (document.getElementById('transaction-type').value === 'seller' && property.purchasePrice) {
+                        document.getElementById('purchase-price-input').value = property.purchasePrice;
+                    }
                     this.calculateRealEstateProfit();
                 }
             }
@@ -122,17 +125,20 @@ const Sales = {
         const commissionFields = document.getElementById('commission-fields');
         const purchaseRow = document.getElementById('result-purchase-row');
         const commissionRow = document.getElementById('result-commission-row');
+        const purchasePriceField = document.getElementById('purchase-price-field');
         
         if (transactionType === 'seller') {
             // 売主の場合
             commissionFields.style.display = 'none';
             purchaseRow.style.display = 'flex';
             commissionRow.style.display = 'none';
+            purchasePriceField.style.display = 'block';
         } else {
             // 仲介の場合
             commissionFields.style.display = 'block';
             purchaseRow.style.display = 'none';
             commissionRow.style.display = 'flex';
+            purchasePriceField.style.display = 'none';
         }
     },
 
@@ -191,13 +197,7 @@ const Sales = {
         
         if (transactionType === 'seller') {
             // 売主の場合：売却価格 - 仕入価格 - 諸経費
-            const propertyId = document.getElementById('sale-property').value;
-            if (propertyId) {
-                const property = Storage.getProperty(propertyId);
-                if (property && property.purchasePrice) {
-                    purchasePrice = property.purchasePrice;
-                }
-            }
+            purchasePrice = parseInt(document.getElementById('purchase-price-input').value) || 0;
             profit = salePrice - purchasePrice - otherExpenses;
             
             document.getElementById('result-purchase-price').textContent = 
@@ -252,16 +252,24 @@ const Sales = {
     saveRealEstateSale() {
         const propertyId = document.getElementById('sale-property').value;
         const property = propertyId ? Storage.getProperty(propertyId) : null;
+        const propertyName = property?.name || document.getElementById('property-name-input').value;
         const transactionType = document.getElementById('transaction-type').value;
         const salePrice = parseInt(document.getElementById('sale-price').value);
         const otherExpenses = parseInt(document.getElementById('other-expenses').value) || 0;
         
+        // 物件名が必須
+        if (!propertyName) {
+            alert('物件名を入力するか、物件を選択してください');
+            return;
+        }
+        
         let profit = 0;
         let commission = 0;
         let commissionType = '';
+        let purchasePrice = 0;
         
         if (transactionType === 'seller') {
-            const purchasePrice = property?.purchasePrice || 0;
+            purchasePrice = parseInt(document.getElementById('purchase-price-input').value) || 0;
             profit = salePrice - purchasePrice - otherExpenses;
         } else {
             commissionType = document.getElementById('commission-type').value;
@@ -284,10 +292,11 @@ const Sales = {
         const sale = {
             type: 'realestate',
             propertyId,
-            propertyName: property?.name || '',
+            propertyName,
             date: document.getElementById('sale-date').value,
             transactionType,
             salePrice,
+            purchasePrice: transactionType === 'seller' ? purchasePrice : null,
             commissionType,
             commission,
             otherExpenses,
@@ -306,6 +315,8 @@ const Sales = {
         
         // フォームリセット
         document.getElementById('realestate-form').reset();
+        document.getElementById('property-name-input').value = '';
+        document.getElementById('purchase-price-input').value = '';
         this.loadDefaults();
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('sale-date').value = today;
