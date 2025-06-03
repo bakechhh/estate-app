@@ -389,11 +389,14 @@ const Storage = {
 
     getUpcomingDeadlines(days = 30) {
         const properties = this.getProperties();
+        const sales = this.getSales(); // 売上データも取得
         const now = new Date();
         const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
         const deadlines = [];
         
+        // 物件関連の通知
         properties.forEach(property => {
+            // 媒介契約満了日のチェック
             if (property.contractEndDate && 
                 (property.status === 'active' || property.status === 'negotiating')) {
                 const endDate = new Date(property.contractEndDate);
@@ -410,7 +413,27 @@ const Storage = {
                 }
             }
             
-            // レインズ登録期限のチェック（専任媒介は7日、専属専任は5日）
+            // レインズ登録期日のチェック（2日前から通知）
+            if (property.reinsDeadline && 
+                (property.status === 'active' || property.status === 'negotiating')) {
+                const deadline = new Date(property.reinsDeadline);
+                
+                if (deadline >= now && deadline <= futureDate) {
+                    const daysRemaining = Math.ceil((deadline - now) / (24 * 60 * 60 * 1000));
+                    
+                    if (daysRemaining <= 2) {
+                        deadlines.push({
+                            property,
+                            type: 'reins-deadline',
+                            message: `レインズ登録期日まで${daysRemaining}日`,
+                            daysRemaining,
+                            urgent: true
+                        });
+                    }
+                }
+            }
+            
+            // レインズ更新のチェック（専任媒介は7日、専属専任は5日）
             if (property.reinsDate && property.transactionMode && 
                 (property.status === 'active' || property.status === 'negotiating')) {
                 const updateDays = property.transactionMode === 'exclusive' ? 5 : 7;
@@ -422,9 +445,48 @@ const Storage = {
                     deadlines.push({
                         property,
                         type: 'reins',
-                        message: `レインズ登録期限まで${daysRemaining}日`,
+                        message: `レインズ更新期限まで${daysRemaining}日`,
                         daysRemaining,
                         urgent: daysRemaining <= 2
+                    });
+                }
+            }
+        });
+        
+        // 売上データから決済期日と融資特約期日をチェック
+        sales.forEach(sale => {
+            if (sale.type !== 'realestate' || sale.collectionStatus === 'collected') return;
+            
+            // 決済期日のチェック（3週間前から通知）
+            if (sale.settlementDate) {
+                const settlementDate = new Date(sale.settlementDate);
+                const daysUntilSettlement = Math.ceil((settlementDate - now) / (24 * 60 * 60 * 1000));
+                
+                if (daysUntilSettlement >= 0 && daysUntilSettlement <= 21) {
+                    deadlines.push({
+                        sale,
+                        type: 'settlement',
+                        message: `決済期日まで${daysUntilSettlement}日`,
+                        propertyName: sale.propertyName || sale.dealName,
+                        daysRemaining: daysUntilSettlement,
+                        urgent: daysUntilSettlement <= 7
+                    });
+                }
+            }
+            
+            // 融資特約期日のチェック（3週間前から通知）
+            if (sale.loanConditionDate) {
+                const loanDate = new Date(sale.loanConditionDate);
+                const daysUntilLoan = Math.ceil((loanDate - now) / (24 * 60 * 60 * 1000));
+                
+                if (daysUntilLoan >= 0 && daysUntilLoan <= 21) {
+                    deadlines.push({
+                        sale,
+                        type: 'loan-condition',
+                        message: `融資特約期日まで${daysUntilLoan}日`,
+                        propertyName: sale.propertyName || sale.dealName,
+                        daysRemaining: daysUntilLoan,
+                        urgent: daysUntilLoan <= 7
                     });
                 }
             }
