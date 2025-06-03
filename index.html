@@ -18,6 +18,11 @@
             <h1>不動産売買管理システム</h1>
             <div class="header-actions">
                 <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
+                <!-- TODOクイックアクセスボタンを追加 -->
+                <button class="icon-btn" onclick="Todos.showTodoModal()" aria-label="TODO追加">📝</button>
+    
+                <!-- ランキングボタンを追加 -->
+                <button class="icon-btn" onclick="Goals.showRanking()" aria-label="ランキング">🏆</button>
                 <button id="notification-btn" class="icon-btn" aria-label="通知">🔔</button>
                 <button id="theme-toggle" class="icon-btn" aria-label="テーマ切替">🌓</button>
             </div>
@@ -62,7 +67,14 @@
                             </div>
                         </div>
                     </div>
-
+                    <!-- ここに目標進捗カードを追加 -->
+                    <div class="dashboard-card goal-card">
+                        <h3>🎯 目標進捗</h3>
+                        <div id="goal-progress">
+                            <p class="no-data">目標が設定されていません</p>
+                        </div>
+                        <button class="secondary-btn" onclick="Goals.showGoalModal()">目標設定</button>
+                    </div>
                     <!-- 期限アラート -->
                     <div class="dashboard-card alert-card">
                         <h3>⏰ 期限アラート</h3>
@@ -77,6 +89,23 @@
                         <div id="recent-transactions" class="transaction-list">
                             <p class="no-data">取引履歴がありません</p>
                         </div>
+                    </div>
+                    <!-- ここにTODOウィジェットを追加 -->
+                    <div class="dashboard-card todo-widget" id="todo-widget">
+                        <h3>📋 TODO</h3>
+                        <div class="todo-list">
+                            <p class="no-data">TODOはありません</p>
+                        </div>
+                        <button class="add-todo-btn" onclick="Todos.showTodoModal()">+ TODO追加</button>
+                    </div>
+            
+                    <!-- ここに実績バッジカードを追加 -->
+                    <div class="dashboard-card badges-card">
+                        <h3>🏆 実績</h3>
+                        <div id="achievement-badges">
+                            <!-- バッジが表示される -->
+                        </div>
+                        <button class="secondary-btn" onclick="Goals.showAllAchievements()">すべての実績を見る</button>
                     </div>
 
                     <!-- カレンダービュー -->
@@ -594,6 +623,10 @@
     <script src="js/notifications.js"></script>
     <script src="js/calendar.js"></script>
     <script src="js/effects.js"></script>
+    <!-- ここに新しいファイルを追加 -->
+    <script src="js/goals.js"></script>
+    <script src="js/memos.js"></script>
+    <script src="js/todos.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
