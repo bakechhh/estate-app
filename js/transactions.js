@@ -89,6 +89,7 @@ const Transactions = {
                             収益: ${EstateApp.formatCurrency(amount)}
                         </div>
                         <div class="transaction-actions">
+                            <button class="info-btn" onclick="Memos.showMemoModal('transaction', '${sale.id}', '${displayName}')">メモ</button>
                             <button class="secondary-btn" onclick="Transactions.toggleCollectionStatus('${sale.id}')">
                                 ${collectionStatus === 'pending' ? '回収済にする' : '未回収に戻す'}
                             </button>
