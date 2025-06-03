@@ -51,7 +51,7 @@ const Sales = {
             if (element) {
                 element.addEventListener('input', () => {
                     // 売却価格が変更されたら、正規手数料の表示も更新
-                    if (id === 'sale-price' && document.getElementById('commission-type').value === 'standard') {
+                    if (id === 'sale-price' && document.getElementById('commission-type')?.value === 'standard') {
                         this.updateCommissionInput('standard');
                     }
                     this.calculateRealEstateProfit();
@@ -72,6 +72,16 @@ const Sales = {
                     }
                     this.calculateRealEstateProfit();
                 }
+            } else {
+                // 選択解除時は物件名入力フィールドをクリア
+                document.getElementById('property-name-input').value = '';
+            }
+        });
+
+        // 物件名直接入力時は物件選択をクリア
+        document.getElementById('property-name-input').addEventListener('input', (e) => {
+            if (e.target.value) {
+                document.getElementById('sale-property').value = '';
             }
         });
 
@@ -202,7 +212,7 @@ const Sales = {
             
             document.getElementById('result-purchase-price').textContent = 
                 `-${EstateApp.formatCurrency(purchasePrice)}`;
-        } else {
+        } else if (transactionType) {
             // 仲介の場合
             const commissionType = document.getElementById('commission-type').value;
             
@@ -321,6 +331,11 @@ const Sales = {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('sale-date').value = today;
         
+        // 物件ステータスを更新（売主として売却した場合）
+        if (transactionType === 'seller' && propertyId) {
+            Storage.updateProperty(propertyId, { status: 'completed' });
+        }
+        
         EstateApp.showToast('売上を登録しました');
         
         // ダッシュボードを更新
@@ -347,6 +362,11 @@ const Sales = {
         
         Storage.saveSale(sale);
         
+        // エフェクト表示
+        if (typeof Effects !== 'undefined') {
+            Effects.showSaveEffect(profit, true);
+        }
+        
         // フォームリセット
         document.getElementById('renovation-form').reset();
         const today = new Date().toISOString().split('T')[0];
@@ -361,17 +381,24 @@ const Sales = {
     },
 
     saveOtherSale() {
+        const amount = parseInt(document.getElementById('other-amount').value);
+        
         const sale = {
             type: 'other',
             subType: document.getElementById('other-type').value,
             date: document.getElementById('other-date').value,
-            amount: parseInt(document.getElementById('other-amount').value),
+            amount: amount,
             customerName: document.getElementById('other-customer').value,
             description: document.getElementById('other-description').value,
-            profit: parseInt(document.getElementById('other-amount').value) // その他は全額を利益とする
+            profit: amount // その他は全額を利益とする
         };
         
         Storage.saveSale(sale);
+        
+        // エフェクト表示
+        if (typeof Effects !== 'undefined') {
+            Effects.showSaveEffect(amount, true);
+        }
         
         // フォームリセット
         document.getElementById('other-form').reset();
