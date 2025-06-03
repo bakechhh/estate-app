@@ -65,11 +65,11 @@ const Dashboard = {
        }
        
        container.innerHTML = deadlines.slice(0, 5).map(deadline => `
-           <div class="alert-item ${deadline.urgent ? 'urgent' : ''}">
-               <div class="alert-property">${deadline.property.name}</div>
-               <div class="alert-message">${deadline.message}</div>
-           </div>
-       `).join('');
+        <div class="alert-item ${deadline.urgent ? 'urgent' : ''}">
+            <div class="alert-property">${deadline.propertyName || deadline.property?.name || '不明'}</div>
+            <div class="alert-message">${deadline.message}</div>
+        </div>
+    `).join('');
    },
 
    updateRecentTransactions() {
