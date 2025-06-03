@@ -861,6 +861,19 @@ textarea {
     min-width: 280px;
 }
 
+
+/* 曜日と日付のグリッドを確実に揃える */
+.calendar-weekdays,
+.calendar-grid {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.weekday,
+.calendar-day {
+    box-sizing: border-box;
+}
+
 .calendar-day {
     aspect-ratio: 1;
     border: 1px solid var(--border-color);
