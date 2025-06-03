@@ -33,15 +33,18 @@ const Notifications = {
             const time = this.getRelativeTime(notification.createdAt);
             
             return `
-                <div class="notification-item ${readClass}" onclick="Notifications.handleNotificationClick('${notification.id}')">
-                    <span class="notification-type ${typeClass}">
-                        ${this.getNotificationTypeText(notification.type)}
-                    </span>
-                    <div class="notification-message">
-                        <strong>${notification.propertyName}</strong><br>
-                        ${notification.message}
+                <div class="notification-item ${readClass}">
+                    <div onclick="Notifications.handleNotificationClick('${notification.id}')">
+                        <span class="notification-type ${typeClass}">
+                            ${this.getNotificationTypeText(notification.type)}
+                        </span>
+                        <div class="notification-message">
+                            <strong>${notification.propertyName}</strong><br>
+                            ${notification.message}
+                        </div>
+                        <div class="notification-time">${time}</div>
                     </div>
-                    <div class="notification-time">${time}</div>
+                    <button class="notification-delete-btn" onclick="Notifications.deleteNotification('${notification.id}')">×</button>
                 </div>
             `;
         }).join('');
@@ -71,6 +74,15 @@ const Notifications = {
         
         // 通知を再表示
         this.renderNotifications();
+    },
+
+    deleteNotification(notificationId) {
+        const notifications = Storage.getNotifications();
+        const filtered = notifications.filter(n => n.id !== notificationId);
+        localStorage.setItem(Storage.KEYS.NOTIFICATIONS, JSON.stringify(filtered));
+        
+        this.renderNotifications();
+        EstateApp.updateNotificationBadge();
     },
 
     getNotificationTypeText(type) {
