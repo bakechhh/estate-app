@@ -307,12 +307,44 @@ const Transactions = {
                         <input type="date" id="edit-collection-date" value="${sale.collectionDate || ''}">
                     </div>
                     <div class="form-group">
+                        <label>取引様態</label>
+                        <select id="edit-transaction-type" disabled>
+                            <option value="seller" ${sale.transactionType === 'seller' ? 'selected' : ''}>売主</option>
+                            <option value="buyer-agent" ${sale.transactionType === 'buyer-agent' ? 'selected' : ''}>買主側仲介</option>
+                            <option value="seller-agent" ${sale.transactionType === 'seller-agent' ? 'selected' : ''}>売主側仲介</option>
+                            <option value="both-agent" ${sale.transactionType === 'both-agent' ? 'selected' : ''}>両手仲介</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>成約価格</label>
                         <input type="number" id="edit-sale-price" value="${sale.salePrice}" required>
                     </div>
+                    ${sale.transactionType === 'seller' ? `
+                        <div class="form-group">
+                            <label>仕入価格</label>
+                            <input type="number" id="edit-purchase-price" value="${sale.purchasePrice || 0}" readonly>
+                        </div>
+                    ` : `
+                        <div class="form-group">
+                            <label>仲介手数料タイプ</label>
+                            <select id="edit-commission-type" disabled>
+                                <option value="standard" ${sale.commissionType === 'standard' ? 'selected' : ''}>正規手数料</option>
+                                <option value="fixed" ${sale.commissionType === 'fixed' ? 'selected' : ''}>33万円固定</option>
+                                <option value="direct" ${sale.commissionType === 'direct' ? 'selected' : ''}>直接入力</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>仲介手数料（計算値）</label>
+                            <input type="number" id="edit-commission" value="${sale.commission || 0}" readonly>
+                        </div>
+                    `}
                     <div class="form-group">
                         <label>諸経費</label>
                         <input type="number" id="edit-other-expenses" value="${sale.otherExpenses || 0}">
+                    </div>
+                    <div class="form-group">
+                        <label>収益（自動計算）</label>
+                        <input type="number" id="edit-profit" value="${sale.profit || 0}" readonly>
                     </div>
                     <div class="form-group full-width">
                         <label>顧客名</label>
@@ -438,6 +470,54 @@ const Transactions = {
             this.updateSaleData(sale);
         });
         
+        // 売買の場合、成約価格・諸経費変更時に収益を再計算
+        if (sale.type === 'realestate') {
+            const salePriceInput = document.getElementById('edit-sale-price');
+            const otherExpensesInput = document.getElementById('edit-other-expenses');
+            
+            const calculateProfit = () => {
+                const salePrice = parseInt(salePriceInput.value) || 0;
+                const otherExpenses = parseInt(otherExpensesInput.value) || 0;
+                let profit = 0;
+                
+                if (sale.transactionType === 'seller') {
+                    const purchasePrice = sale.purchasePrice || 0;
+                    profit = salePrice - purchasePrice - otherExpenses;
+                } else {
+                    // 仲介の場合、手数料を再計算
+                    let commission = 0;
+                    if (sale.commissionType === 'fixed') {
+                        commission = 300000;
+                    } else if (sale.commissionType === 'standard') {
+                        commission = this.calculateStandardCommission(salePrice);
+                    } else if (sale.commissionType === 'direct') {
+                        commission = sale.commission || 0;
+                    }
+                    
+                    // 両手仲介の場合は2倍
+                    if (sale.transactionType === 'both-agent') {
+                        commission = commission * 2;
+                    }
+                    
+                    // 仲介手数料フィールドを更新
+                    const commissionInput = document.getElementById('edit-commission');
+                    if (commissionInput) {
+                        commissionInput.value = commission;
+                    }
+                    
+                    profit = commission - otherExpenses;
+                }
+                
+                document.getElementById('edit-profit').value = profit;
+            };
+            
+            salePriceInput.addEventListener('input', calculateProfit);
+            otherExpensesInput.addEventListener('input', calculateProfit);
+            
+            // 初期計算
+            calculateProfit();
+        }
+        
         // リフォームの場合、利益計算のリアルタイム更新
         if (sale.type === 'renovation') {
             const costInput = document.getElementById('edit-cost');
@@ -449,11 +529,41 @@ const Transactions = {
             }
         }
     },
+    
+    // 仲介手数料計算メソッドを追加
+    calculateStandardCommission(salePrice) {
+        // 800万円以下は一律30万円（税抜）
+        if (salePrice <= 8000000) {
+            return 300000;
+        }
+        
+        // 800万円超は正規の仲介手数料を計算
+        let commission = 0;
+        
+        if (salePrice <= 2000000) {
+            // 200万円以下：5%
+            commission = salePrice * 0.05;
+        } else if (salePrice <= 4000000) {
+            // 200万円超400万円以下：4%+2万円
+            commission = salePrice * 0.04 + 20000;
+        } else {
+            // 400万円超：3%+6万円
+            commission = salePrice * 0.03 + 60000;
+        }
+        
+        return Math.floor(commission);
+    },
 
     calculateEditProfit() {
         const cost = parseInt(document.getElementById('edit-cost').value) || 0;
         const price = parseInt(document.getElementById('edit-price').value) || 0;
-        // 利益計算のプレビューが必要な場合はここに実装
+        const profit = price - cost;
+        
+        // 利益を表示するフィールドを追加する必要がある場合
+        const profitField = document.getElementById('edit-profit');
+        if (profitField) {
+            profitField.value = profit;
+        }
     },
 
     updateSaleData(sale) {
@@ -466,22 +576,41 @@ const Transactions = {
         };
         
         if (sale.type === 'realestate') {
+            const salePrice = parseInt(document.getElementById('edit-sale-price').value);
+            const otherExpenses = parseInt(document.getElementById('edit-other-expenses').value) || 0;
+            
             updates = {
                 ...updates,
                 propertyName: document.getElementById('edit-property-name').value,
                 settlementDate: document.getElementById('edit-settlement-date').value,
                 loanConditionDate: document.getElementById('edit-loan-condition-date').value || null,
-                salePrice: parseInt(document.getElementById('edit-sale-price').value),
-                otherExpenses: parseInt(document.getElementById('edit-other-expenses').value) || 0,
+                salePrice: salePrice,
+                otherExpenses: otherExpenses,
                 customerName: document.getElementById('edit-customer-name').value,
                 notes: document.getElementById('edit-notes').value
             };
             
             // 収益の再計算
             if (sale.transactionType === 'seller') {
-                updates.profit = updates.salePrice - (sale.purchasePrice || 0) - updates.otherExpenses;
+                updates.profit = salePrice - (sale.purchasePrice || 0) - otherExpenses;
             } else {
-                updates.profit = (sale.commission || 0) - updates.otherExpenses;
+                // 仲介の場合、手数料を再計算
+                let commission = 0;
+                if (sale.commissionType === 'fixed') {
+                    commission = 300000;
+                } else if (sale.commissionType === 'standard') {
+                    commission = this.calculateStandardCommission(salePrice);
+                } else if (sale.commissionType === 'direct') {
+                    commission = sale.commission || 0;
+                }
+                
+                // 両手仲介の場合は2倍
+                if (sale.transactionType === 'both-agent') {
+                    commission = commission * 2;
+                }
+                
+                updates.commission = commission;
+                updates.profit = commission - otherExpenses;
             }
             
         } else if (sale.type === 'renovation') {
