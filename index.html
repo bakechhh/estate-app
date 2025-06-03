@@ -126,22 +126,27 @@
                     <button class="sub-tab-btn" data-subtab="renovation">リフォーム</button>
                     <button class="sub-tab-btn" data-subtab="other">その他</button>
                 </div>
-
+            
                 <!-- 売買サブタブ -->
                 <div id="realestate-subtab" class="sub-tab-content active">
                     <form id="realestate-form" class="sales-form">
                         <div class="form-group">
-                            <label for="sale-property">物件選択</label>
-                            <select id="sale-property" required>
+                            <label for="sale-property">物件選択（任意）</label>
+                            <select id="sale-property">
                                 <option value="">物件を選択してください</option>
                             </select>
                         </div>
-
+            
+                        <div class="form-group">
+                            <label for="property-name-input">物件名（直接入力）</label>
+                            <input type="text" id="property-name-input" placeholder="物件選択しない場合は入力">
+                        </div>
+            
                         <div class="form-group">
                             <label for="sale-date">成約日</label>
                             <input type="date" id="sale-date" required>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="transaction-type">取引様態</label>
                             <select id="transaction-type" required>
@@ -152,12 +157,19 @@
                                 <option value="both-agent">両手仲介</option>
                             </select>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="sale-price">成約価格（円）</label>
                             <input type="number" id="sale-price" required min="0">
                         </div>
-
+            
+                        <div id="purchase-price-field" style="display: none;">
+                            <div class="form-group">
+                                <label for="purchase-price-input">仕入価格（円）</label>
+                                <input type="number" id="purchase-price-input" min="0" placeholder="売主の場合は入力">
+                            </div>
+                        </div>
+            
                         <div id="commission-fields" style="display: none;">
                             <div class="form-group">
                                 <label for="commission-type">仲介手数料</label>
@@ -172,22 +184,22 @@
                                 <div id="commission-display" class="commission-info"></div>
                             </div>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="other-expenses">諸経費（円）</label>
                             <input type="number" id="other-expenses" min="0" value="0">
                         </div>
-
+            
                         <div class="form-group">
                             <label for="customer-name">顧客名</label>
                             <input type="text" id="customer-name" required>
                         </div>
-
+            
                         <div class="form-group">
                             <label for="sale-notes">備考</label>
                             <textarea id="sale-notes" rows="3"></textarea>
                         </div>
-
+            
                         <div class="result-box">
                             <h3>収益計算</h3>
                             <div class="result-item">
@@ -211,7 +223,7 @@
                                 <span id="result-profit">¥0</span>
                             </div>
                         </div>
-
+            
                         <button type="submit" class="primary-btn">売上登録</button>
                     </form>
                 </div>
