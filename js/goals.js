@@ -41,7 +41,24 @@ const Goals = {
             `;
         }
     },
-
+    checkGoalAchievement(goal) {
+        const achievements = Storage.getAchievements();
+        const achievementId = `goal_achieved_${goal.period}`;
+        
+        if (!achievements.find(a => a.id === achievementId)) {
+            const achievement = {
+                id: achievementId,
+                name: '目標達成者',
+                description: `${goal.period}の月間目標を達成`,
+                icon: '⭐',
+                unlockedAt: new Date().toISOString()
+            };
+            
+            Storage.saveAchievement(achievement);
+            this.showAchievementUnlock(achievement);
+        }
+    },
+    
     setGoal(type, period, targetAmount, targetCount) {
         const goal = {
             id: Date.now().toString(),
