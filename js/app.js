@@ -138,23 +138,27 @@ const EstateApp = {
             const existingNotifications = Storage.getNotifications();
             const today = new Date().toDateString();
             
-            // 通知IDの生成
-            const notificationId = deadline.property ? deadline.property.id : deadline.sale?.id;
-            const notificationName = deadline.property ? deadline.property.name : deadline.propertyName;
+            // 通知の一意性を確保するためのキー生成
+            let notificationKey = '';
+            if (deadline.property) {
+                notificationKey = `${deadline.property.id}-${deadline.type}`;
+            } else if (deadline.sale) {
+                notificationKey = `${deadline.sale.id}-${deadline.type}`;
+            }
             
-            // 同じ物件/売上・同じ種類の通知が今日既に作成されているかチェック
-            const alreadyNotified = existingNotifications.some(n => 
-                (n.propertyId === notificationId || n.saleId === notificationId) && 
-                n.type === deadline.type &&
-                new Date(n.createdAt).toDateString() === today
-            );
+            // 同じキーの通知が今日既に作成されているかチェック
+            const alreadyNotified = existingNotifications.some(n => {
+                const nKey = n.propertyId ? `${n.propertyId}-${n.type}` : `${n.saleId}-${n.type}`;
+                return nKey === notificationKey && 
+                       new Date(n.createdAt).toDateString() === today;
+            });
             
-            if (!alreadyNotified) {
+            if (!alreadyNotified && notificationKey) {
                 const notification = {
                     type: deadline.type,
                     propertyId: deadline.property?.id,
                     saleId: deadline.sale?.id,
-                    propertyName: notificationName,
+                    propertyName: deadline.propertyName || deadline.property?.name,
                     message: deadline.message,
                     urgent: deadline.urgent
                 };
