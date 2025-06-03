@@ -14,6 +14,7 @@ const EstateApp = {
         Inventory.init();
         Sales.init();
         Transactions.init();
+        Yearly.init();      // 年間推移の初期化
         Reports.init();
         Export.init();
         Notifications.init();
@@ -80,6 +81,9 @@ const EstateApp = {
                         break;
                     case 'transactions':
                         Transactions.renderTransactionList();
+                        break;
+                    case 'yearly':
+                        Yearly.renderYearlyReport();
                         break;
                     case 'reports':
                         // 必要に応じて初期化
