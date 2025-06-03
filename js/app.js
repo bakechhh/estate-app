@@ -18,6 +18,9 @@ const EstateApp = {
         Export.init();
         Notifications.init();
         Calendar.init();
+        Goals.init();      // 目標管理の初期化
+        Todos.init();      // TODO管理の初期化
+        Memos.init();      // メモ管理の初期化
         
         // 定期的な通知チェック（5分ごと）
         this.notificationCheckInterval = setInterval(() => {
