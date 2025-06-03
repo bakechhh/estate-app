@@ -391,6 +391,7 @@ const Storage = {
         const properties = this.getProperties();
         const sales = this.getSales(); // 売上データも取得
         const now = new Date();
+        now.setHours(0, 0, 0, 0); // 時間をリセット
         const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
         const deadlines = [];
         
