@@ -41,6 +41,7 @@ const Goals = {
             `;
         }
     },
+
     checkGoalAchievement(goal) {
         const achievements = Storage.getAchievements();
         const achievementId = `goal_achieved_${goal.period}`;
@@ -153,6 +154,9 @@ const Goals = {
         
         document.body.appendChild(celebration);
         
+        // 効果音を再生（音声ファイルが必要）
+        // this.playSuccessSound();
+        
         setTimeout(() => {
             celebration.classList.add('fade-out');
             setTimeout(() => celebration.remove(), 1000);
@@ -161,6 +165,7 @@ const Goals = {
         // 実績チェック
         this.checkAchievements();
     },
+
     showGoalModal() {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -259,7 +264,8 @@ const Goals = {
         });
         
         document.body.appendChild(modal);
-    }
+    },
+
     generateConfetti(count) {
         let confetti = '';
         const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500'];
@@ -279,6 +285,13 @@ const Goals = {
         }
         
         return confetti;
+    },
+
+    playSuccessSound() {
+        // 効果音を再生（音声ファイルが必要）
+        // const audio = new Audio('sounds/success.mp3');
+        // audio.volume = 0.5;
+        // audio.play().catch(e => console.log('効果音の再生に失敗しました'));
     },
 
     showRanking(period = 'monthly') {
