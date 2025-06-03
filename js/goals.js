@@ -1,4 +1,4 @@
-// goals.js - 目標管理・モチベーション機能
+// goals.js - 目標管理・モチベーション
 const Goals = {
     init() {
         this.setupEventListeners();
