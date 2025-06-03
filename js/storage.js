@@ -1,0 +1,345 @@
+// storage.js - LocalStorage管理
+const Storage = {
+    KEYS: {
+        PROPERTIES: 'estate_properties',
+        SALES: 'estate_sales',
+        SETTINGS: 'estate_settings',
+        THEME: 'estate_theme',
+        NOTIFICATIONS: 'estate_notifications',
+        LAST_PROPERTY_CODE: 'estate_last_property_code'
+    },
+
+    // 物件データ
+    getProperties() {
+        const data = localStorage.getItem(this.KEYS.PROPERTIES);
+        return data ? JSON.parse(data) : [];
+    },
+
+    saveProperty(property) {
+        const properties = this.getProperties();
+        
+        if (!property.id) {
+            property.id = Date.now().toString();
+            property.code = this.generatePropertyCode();
+            property.createdAt = new Date().toISOString();
+            properties.unshift(property);
+        } else {
+            const index = properties.findIndex(p => p.id === property.id);
+            if (index !== -1) {
+                property.updatedAt = new Date().toISOString();
+                properties[index] = { ...properties[index], ...property };
+            }
+        }
+        
+        localStorage.setItem(this.KEYS.PROPERTIES, JSON.stringify(properties));
+        return property;
+    },
+
+    getProperty(id) {
+        const properties = this.getProperties();
+        return properties.find(p => p.id === id);
+    },
+
+    updateProperty(id, updates) {
+        const properties = this.getProperties();
+        const index = properties.findIndex(p => p.id === id);
+        
+        if (index !== -1) {
+            properties[index] = { 
+                ...properties[index], 
+                ...updates,
+                updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem(this.KEYS.PROPERTIES, JSON.stringify(properties));
+            return properties[index];
+        }
+        return null;
+    },
+
+    deleteProperty(id) {
+        const properties = this.getProperties();
+        const filtered = properties.filter(p => p.id !== id);
+        localStorage.setItem(this.KEYS.PROPERTIES, JSON.stringify(filtered));
+        return true;
+    },
+
+    generatePropertyCode() {
+        let lastCode = localStorage.getItem(this.KEYS.LAST_PROPERTY_CODE);
+        let nextNumber = 1;
+        
+        if (lastCode) {
+            const match = lastCode.match(/(\d+)$/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        
+        const newCode = `P${new Date().getFullYear()}${String(nextNumber).padStart(4, '0')}`;
+        localStorage.setItem(this.KEYS.LAST_PROPERTY_CODE, newCode);
+        return newCode;
+    },
+
+    // 売上データ
+    getSales() {
+        const data = localStorage.getItem(this.KEYS.SALES);
+        return data ? JSON.parse(data) : [];
+    },
+
+    saveSale(sale) {
+        const sales = this.getSales();
+        sale.id = Date.now().toString();
+        sale.createdAt = new Date().toISOString();
+        sales.unshift(sale);
+        localStorage.setItem(this.KEYS.SALES, JSON.stringify(sales));
+        
+        // 物件のステータス更新（売買の場合）
+        if (sale.type === 'realestate' && sale.propertyId) {
+            this.updateProperty(sale.propertyId, { status: 'completed' });
+        }
+        
+        return sale;
+    },
+
+    updateSale(id, updates) {
+        const sales = this.getSales();
+        const index = sales.findIndex(s => s.id === id);
+        
+        if (index !== -1) {
+            sales[index] = { 
+                ...sales[index], 
+                ...updates,
+                updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem(this.KEYS.SALES, JSON.stringify(sales));
+            return sales[index];
+        }
+        return null;
+    },
+
+    deleteSale(id) {
+        const sales = this.getSales();
+        const filtered = sales.filter(s => s.id !== id);
+        localStorage.setItem(this.KEYS.SALES, JSON.stringify(filtered));
+        return true;
+    },
+
+    // 通知データ
+    getNotifications() {
+        const data = localStorage.getItem(this.KEYS.NOTIFICATIONS);
+        return data ? JSON.parse(data) : [];
+    },
+
+    saveNotification(notification) {
+        const notifications = this.getNotifications();
+        notification.id = Date.now().toString();
+        notification.createdAt = new Date().toISOString();
+        notification.read = false;
+        notifications.unshift(notification);
+        
+        // 最大100件まで保持
+        if (notifications.length > 100) {
+            notifications.splice(100);
+        }
+        
+        localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+        return notification;
+    },
+
+    markNotificationAsRead(id) {
+        const notifications = this.getNotifications();
+        const notification = notifications.find(n => n.id === id);
+        
+        if (notification) {
+            notification.read = true;
+            localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+        }
+    },
+
+    clearNotifications() {
+        localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify([]));
+    },
+
+    // 設定
+    getSettings() {
+        const data = localStorage.getItem(this.KEYS.SETTINGS);
+        return data ? JSON.parse(data) : {
+            defaultTaxRate: 10,
+            notificationDays: 30,
+            enableBrowserNotification: false
+        };
+    },
+
+    saveSettings(settings) {
+        localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(settings));
+        return settings;
+    },
+
+    // テーマ
+    getTheme() {
+        return localStorage.getItem(this.KEYS.THEME) || 'light';
+    },
+
+    setTheme(theme) {
+        localStorage.setItem(this.KEYS.THEME, theme);
+        return theme;
+    },
+
+    // データ分析用メソッド
+    getMonthlyStats(yearMonth) {
+        const [year, month] = yearMonth.split('-').map(Number);
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0, 23, 59, 59);
+        
+        const sales = this.getSales().filter(sale => {
+            const saleDate = new Date(sale.date);
+            return saleDate >= startDate && saleDate <= endDate;
+        });
+        
+        const stats = {
+            totalRevenue: 0,
+            dealCount: 0,
+            realEstateRevenue: 0,
+            renovationRevenue: 0,
+            otherRevenue: 0,
+            realEstateCount: 0,
+            renovationCount: 0,
+            otherCount: 0
+        };
+        
+        sales.forEach(sale => {
+            stats.totalRevenue += sale.profit || 0;
+            stats.dealCount++;
+            
+            switch (sale.type) {
+                case 'realestate':
+                    stats.realEstateRevenue += sale.profit || 0;
+                    stats.realEstateCount++;
+                    break;
+                case 'renovation':
+                    stats.renovationRevenue += sale.profit || 0;
+                    stats.renovationCount++;
+                    break;
+                case 'other':
+                    stats.otherRevenue += sale.amount || 0;
+                    stats.otherCount++;
+                    break;
+            }
+        });
+        
+        return stats;
+    },
+
+    getPropertyStats() {
+        const properties = this.getProperties();
+        const stats = {
+            total: properties.length,
+            active: 0,
+            negotiating: 0,
+            contracted: 0,
+            completed: 0,
+            totalValue: 0
+        };
+        
+        properties.forEach(property => {
+            stats[property.status]++;
+            if (property.status === 'active' || property.status === 'negotiating') {
+                stats.totalValue += property.sellingPrice || 0;
+            }
+        });
+        
+        return stats;
+    },
+
+    getUpcomingDeadlines(days = 30) {
+        const properties = this.getProperties();
+        const now = new Date();
+        const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+        const deadlines = [];
+        
+        properties.forEach(property => {
+            if (property.contractEndDate && 
+                (property.status === 'active' || property.status === 'negotiating')) {
+                const endDate = new Date(property.contractEndDate);
+                
+                if (endDate >= now && endDate <= futureDate) {
+                    const daysRemaining = Math.ceil((endDate - now) / (24 * 60 * 60 * 1000));
+                    deadlines.push({
+                        property,
+                        type: 'contract',
+                        message: `媒介契約満了まで${daysRemaining}日`,
+                        daysRemaining,
+                        urgent: daysRemaining <= 7
+                    });
+                }
+            }
+            
+            // レインズ更新期限のチェック（専任媒介は7日、専属専任は5日）
+            if (property.reinsDate && property.transactionMode && 
+                (property.status === 'active' || property.status === 'negotiating')) {
+                const updateDays = property.transactionMode === 'exclusive' ? 5 : 7;
+                const lastUpdate = new Date(property.reinsDate);
+                const nextUpdate = new Date(lastUpdate.getTime() + updateDays * 24 * 60 * 60 * 1000);
+                
+                if (nextUpdate >= now && nextUpdate <= futureDate) {
+                    const daysRemaining = Math.ceil((nextUpdate - now) / (24 * 60 * 60 * 1000));
+                    deadlines.push({
+                        property,
+                        type: 'reins',
+                        message: `レインズ更新期限まで${daysRemaining}日`,
+                        daysRemaining,
+                        urgent: daysRemaining <= 2
+                    });
+                }
+            }
+        });
+        
+        return deadlines.sort((a, b) => a.daysRemaining - b.daysRemaining);
+    },
+
+    // エクスポート/インポート
+    exportData() {
+        return {
+            properties: this.getProperties(),
+            sales: this.getSales(),
+            settings: this.getSettings(),
+            notifications: this.getNotifications(),
+            exportDate: new Date().toISOString(),
+            version: '1.0'
+        };
+    },
+
+    importData(data) {
+        try {
+            if (data.properties) {
+                localStorage.setItem(this.KEYS.PROPERTIES, JSON.stringify(data.properties));
+            }
+            if (data.sales) {
+                localStorage.setItem(this.KEYS.SALES, JSON.stringify(data.sales));
+            }
+            if (data.settings) {
+                localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(data.settings));
+            }
+            if (data.notifications) {
+                localStorage.setItem(this.KEYS.NOTIFICATIONS, JSON.stringify(data.notifications));
+            }
+            return true;
+        } catch (error) {
+            console.error('Import error:', error);
+            return false;
+        }
+    },
+
+    // データクリア
+    clearAllData() {
+        const theme = this.getTheme();
+        
+        // テーマ以外をクリア
+        Object.keys(this.KEYS).forEach(key => {
+            if (key !== 'THEME') {
+                localStorage.removeItem(this.KEYS[key]);
+            }
+        });
+        
+        return true;
+    }
+};
