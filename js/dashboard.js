@@ -1,26 +1,23 @@
 // dashboard.js - ダッシュボード機能
 const Dashboard = {
-   init() {
-       this.refresh();
-       // カレンダーも初期化
-       if (typeof Calendar !== 'undefined') {
-           Calendar.render();
-       }
-       // 実績バッジを表示
-       this.updateAchievementBadges();
-       // TODOウィジェットを表示
-       if (typeof Todos !== 'undefined') {
-           Todos.renderTodoWidget();
-       }
-   },
+    init() {
+        this.refresh();
+        if (typeof Calendar !== 'undefined') {
+            Calendar.render();
+        }
+        // TODOウィジェットを表示
+        if (typeof Todos !== 'undefined') {
+            Todos.renderTodoWidget();
+        }
+    },
 
-   refresh() {
-       this.updateSummary();
-       this.updateDeadlineAlerts();
-       this.updateRecentTransactions();
-       this.updateGoalProgress();
-       this.updateAchievementBadges();
-   },
+    refresh() {
+        this.updateSummary();
+        this.updateDeadlineAlerts();
+        this.updateRecentTransactions();
+        this.updateGoalProgress();
+        this.updateMediationProperties(); // 実績の代わりに媒介獲得物件
+    },
 
    updateSummary() {
        // 今月の統計を取得
@@ -124,57 +121,141 @@ const Dashboard = {
    },
 
    updateGoalProgress() {
-       const goals = Storage.getGoals();
-       const currentMonth = new Date().toISOString().slice(0, 7);
-       const monthlyGoal = goals.find(g => g.period === currentMonth && g.type === 'monthly');
-       const progressElement = document.getElementById('goal-progress');
-       
-       if (!progressElement) return;
-       
-       if (monthlyGoal) {
-           const stats = Storage.getMonthlyStats(monthlyGoal.period);
-           const progress = (stats.totalRevenue / monthlyGoal.targetAmount) * 100;
+        const goals = Storage.getGoals();
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const monthlyGoal = goals.find(g => g.period === currentMonth && g.type === 'monthly');
+        const progressElement = document.getElementById('goal-progress');
+        
+        if (!progressElement) return;
+        
+        const stats = Storage.getMonthlyStats(currentMonth);
+        
+        if (monthlyGoal) {
+            const revenueProgress = (stats.totalRevenue / monthlyGoal.targetAmount) * 100;
+            const contractProgress = monthlyGoal.targetContracts ? 
+                (stats.contractCount / monthlyGoal.targetContracts) * 100 : 0;
+            const mediationProgress = monthlyGoal.targetMediations ? 
+                (stats.mediationCount / monthlyGoal.targetMediations) * 100 : 0;
+            
+            progressElement.innerHTML = `
+                <div class="goal-progress-container">
+                    <div class="goal-item">
+                        <div class="goal-info">
+                            <span>月間売上目標</span>
+                            <span class="progress-percentage">${Math.round(revenueProgress)}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${Math.min(revenueProgress, 100)}%"></div>
+                        </div>
+                        <div class="goal-detail">
+                            ${EstateApp.formatCurrency(stats.totalRevenue)} / ${EstateApp.formatCurrency(monthlyGoal.targetAmount)}
+                        </div>
+                    </div>
+                    
+                    ${monthlyGoal.targetContracts ? `
+                        <div class="goal-item">
+                            <div class="goal-info">
+                                <span>契約件数目標</span>
+                                <span class="progress-percentage">${Math.round(contractProgress)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${Math.min(contractProgress, 100)}%"></div>
+                            </div>
+                            <div class="goal-detail">
+                                ${stats.contractCount}件 / ${monthlyGoal.targetContracts}件
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${monthlyGoal.targetMediations ? `
+                        <div class="goal-item">
+                            <div class="goal-info">
+                                <span>媒介獲得目標</span>
+                                <span class="progress-percentage">${Math.round(mediationProgress)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${Math.min(mediationProgress, 100)}%"></div>
+                            </div>
+                            <div class="goal-detail">
+                                ${stats.mediationCount}件 / ${monthlyGoal.targetMediations}件
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${revenueProgress >= 100 || contractProgress >= 100 || mediationProgress >= 100 ? 
+                        '<div class="goal-achieved">🎉 目標達成項目があります！</div>' : ''}
+                </div>
+            `;
+        } else {
+            progressElement.innerHTML = `
+                <div class="current-stats">
+                    <div class="stat-row">
+                        <span>今月の売上：</span>
+                        <span>${EstateApp.formatCurrency(stats.totalRevenue)}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>契約件数：</span>
+                        <span>${stats.contractCount}件</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>媒介獲得数：</span>
+                        <span>${stats.mediationCount}件</span>
+                    </div>
+                </div>
+                <p class="no-data">目標が設定されていません</p>
+            `;
+        }
+    },
+
+   updateMediationProperties() {
+           const currentMonth = new Date().toISOString().slice(0, 7);
+           const mediationProperties = Storage.getMonthlyMediationProperties(currentMonth);
+           const container = document.getElementById('mediation-properties');
            
-           progressElement.innerHTML = `
-               <div class="goal-progress-container">
-                   <div class="goal-info">
-                       <span>月間目標: ${EstateApp.formatCurrency(monthlyGoal.targetAmount)}</span>
-                       <span class="progress-percentage">${Math.round(progress)}%</span>
-                   </div>
-                   <div class="progress-bar">
-                       <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
-                   </div>
-                   ${progress >= 100 ? '<div class="goal-achieved">🎉 目標達成！</div>' : ''}
+           if (!container) return;
+           
+           if (mediationProperties.length === 0) {
+               container.innerHTML = '<p class="no-data">今月の媒介獲得物件はありません</p>';
+               return;
+           }
+           
+           container.innerHTML = `
+               <div class="mediation-table-container">
+                   <table class="mediation-table">
+                       <thead>
+                           <tr>
+                               <th>媒介種別</th>
+                               <th>媒介日</th>
+                               <th>物件種別</th>
+                               <th>所在地</th>
+                               <th>売出価格</th>
+                           </tr>
+                       </thead>
+                       <tbody>
+                           ${mediationProperties.map(property => `
+                               <tr onclick="Inventory.showPropertyDetail('${property.id}')" style="cursor: pointer;">
+                                   <td>${this.getMediationType(property.transactionMode)}</td>
+                                   <td>${EstateApp.formatDate(property.contractDate)}</td>
+                                   <td>${Inventory.getPropertyTypeText(property.type)}</td>
+                                   <td class="address-cell">${property.address}</td>
+                                   <td class="price-cell">${EstateApp.formatCurrency(property.sellingPrice)}</td>
+                               </tr>
+                           `).join('')}
+                       </tbody>
+                   </table>
                </div>
            `;
-           
-           // 目標達成時の実績チェック
-           if (progress >= 100 && typeof Goals !== 'undefined') {
-               Goals.checkGoalAchievement(monthlyGoal);
-           }
-       } else {
-           progressElement.innerHTML = '<p class="no-data">目標が設定されていません</p>';
+       },
+   
+       getMediationType(mode) {
+           const modeMap = {
+               'exclusive': '専属専任',
+               'special': '専任',
+               'general': '一般'
+           };
+           return modeMap[mode] || mode;
        }
-   },
-
-   updateAchievementBadges() {
-       const achievements = Storage.getAchievements();
-       const container = document.getElementById('achievement-badges');
-       
-       if (container) {
-           if (achievements.length === 0) {
-               container.innerHTML = '<p class="no-data">まだ実績がありません</p>';
-           } else {
-               const recentAchievements = achievements.slice(0, 6);
-               container.innerHTML = recentAchievements.map(achievement => `
-                   <div class="achievement-badge" title="${achievement.name}: ${achievement.description}">
-                       ${achievement.icon}
-                   </div>
-               `).join('');
-           }
-       }
-   }
-};
+   };
 
 // グローバルスコープに公開
 window.Dashboard = Dashboard;
