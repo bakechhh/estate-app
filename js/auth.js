@@ -1,63 +1,50 @@
-// auth.js - 認証関連の処理
+// auth.js - 認証関連の処理（シンプル版）
 const Auth = {
     // 現在のユーザー情報を保持
     currentUser: null,
     currentUserProfile: null,
 
-    // ログイン処理
+    // ログイン処理（user_codeとパスワードでログイン）
     async login(userId, password) {
         try {
-            // まず、user_codeからユーザー情報を取得
+            // Step 1: user_codeからユーザー情報を取得
             const { data: userData, error: userError } = await supabase
                 .from('users')
-                .select('id')
+                .select('*')
                 .eq('user_code', userId)
                 .eq('is_active', true)
                 .single();
 
             if (userError || !userData) {
-                console.error('User lookup error:', userError);
+                console.error('User not found:', userError);
                 return { success: false, error: '担当者IDが見つかりません' };
             }
 
-            // ユーザーIDからAuthユーザーのメールアドレスを取得
-            // 注意: 実際の実装では、usersテーブルにemailカラムを追加するか、
-            // auth.usersビューを使用することを推奨
-            const email = `${userId.toLowerCase()}@example.com`;
-            
-            // Supabase Authでログイン
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: email,
+            // Step 2: 取得したメールアドレスでログイン
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: userData.email,
                 password: password
             });
 
-            if (error) {
-                console.error('Auth error:', error);
-                
-                // エラーメッセージを日本語化
-                if (error.message.includes('Invalid login credentials')) {
-                    return { success: false, error: '担当者IDまたはパスワードが正しくありません' };
-                }
-                return { success: false, error: 'ログインに失敗しました' };
+            if (authError) {
+                console.error('Auth error:', authError);
+                return { success: false, error: 'パスワードが正しくありません' };
             }
 
-            // ユーザープロファイルを取得
-            const profile = await this.getUserProfile(data.user.id);
+            // Step 3: ユーザープロファイルを取得（店舗情報含む）
+            const profile = await this.getUserProfile(authData.user.id);
             if (!profile) {
                 await supabase.auth.signOut();
-                return { success: false, error: 'ユーザー情報が見つかりません' };
+                return { success: false, error: 'ユーザー情報の取得に失敗しました' };
             }
 
-            // アクティブチェック
-            if (!profile.is_active) {
-                await supabase.auth.signOut();
-                return { success: false, error: 'このアカウントは無効化されています' };
-            }
-
-            this.currentUser = data.user;
+            // 成功
+            this.currentUser = authData.user;
             this.currentUserProfile = profile;
 
-            return { success: true, user: data.user, profile };
+            console.log('Login successful:', profile);
+            return { success: true, user: authData.user, profile };
+
         } catch (error) {
             console.error('Login error:', error);
             return { success: false, error: 'ログイン処理中にエラーが発生しました' };
@@ -77,10 +64,11 @@ const Auth = {
             window.location.href = './login.html';
         } catch (error) {
             console.error('Logout error:', error);
+            alert('ログアウトに失敗しました');
         }
     },
 
-    // ユーザープロファイル取得
+    // ユーザープロファイル取得（店舗情報含む）
     async getUserProfile(userId) {
         try {
             const { data, error } = await supabase
@@ -92,7 +80,11 @@ const Auth = {
                 .eq('id', userId)
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Profile fetch error:', error);
+                return null;
+            }
+
             return data;
         } catch (error) {
             console.error('Get user profile error:', error);
@@ -103,15 +95,25 @@ const Auth = {
     // 認証状態をチェック
     async checkAuth() {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
+            // 現在のセッションを取得
+            const { data: { session }, error } = await supabase.auth.getSession();
             
-            if (!session) {
+            if (error || !session) {
+                console.log('No active session');
                 return { authenticated: false };
             }
 
             // ユーザープロファイルを取得
             const profile = await this.getUserProfile(session.user.id);
-            if (!profile || !profile.is_active) {
+            if (!profile) {
+                console.error('Profile not found for authenticated user');
+                await this.logout();
+                return { authenticated: false };
+            }
+
+            // アクティブチェック
+            if (!profile.is_active) {
+                console.log('User is not active');
                 await this.logout();
                 return { authenticated: false };
             }
@@ -147,15 +149,19 @@ const Auth = {
 
     // 認証が必要なページの初期化
     async initProtectedPage() {
+        console.log('Initializing protected page...');
+        
         const authStatus = await this.checkAuth();
         
         if (!authStatus.authenticated) {
-            // 未認証の場合はログインページへ
+            console.log('Not authenticated, redirecting to login...');
             window.location.href = './login.html';
             return false;
         }
 
-        // ユーザー情報をUIに反映（必要に応じて）
+        console.log('User authenticated:', authStatus.profile);
+        
+        // ユーザー情報をUIに反映
         this.updateUIWithUserInfo();
         
         return true;
@@ -163,24 +169,33 @@ const Auth = {
 
     // UIにユーザー情報を反映
     updateUIWithUserInfo() {
-        // ヘッダーにユーザー名を表示するなど
         const profile = this.currentUserProfile;
-        if (profile) {
-            // 例: ヘッダーにユーザー名と店舗名を表示
-            const headerElement = document.querySelector('header h1');
-            if (headerElement) {
-                headerElement.textContent = `不動産売買管理システム - ${profile.store.store_name}`;
-            }
+        if (!profile) return;
+
+        // ヘッダーのユーザー情報を更新
+        const userInfo = document.getElementById('user-info');
+        if (userInfo) {
+            const roleIcon = profile.role === 'admin' ? '👑' : '👤';
+            userInfo.innerHTML = `${roleIcon} ${profile.user_name} (${profile.store.store_name})`;
+        }
+
+        // ヘッダータイトルを更新（オプション）
+        const headerTitle = document.querySelector('header h1');
+        if (headerTitle) {
+            headerTitle.textContent = `不動産売買管理システム - ${profile.store.store_name}`;
         }
     },
 
     // セッション変更の監視
     setupAuthListener() {
         supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth state changed:', event);
+            
             if (event === 'SIGNED_OUT') {
                 window.location.href = './login.html';
             } else if (event === 'SIGNED_IN' && session) {
-                // 必要に応じて処理
+                // サインイン時の処理（必要に応じて）
+                console.log('User signed in');
             }
         });
     }
