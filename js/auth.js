@@ -1,39 +1,52 @@
-// auth.js - 認証関連の処理（シンプル版）
+// auth.js - 認証関連の処理（修正版）
 const Auth = {
     // 現在のユーザー情報を保持
     currentUser: null,
     currentUserProfile: null,
 
-    // ログイン処理（user_codeとパスワードでログイン）
+    // ログイン処理（データベース関数を使用）
     async login(userId, password) {
         try {
-            // Step 1: user_codeからユーザー情報を取得
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('user_code', userId)
-                .eq('is_active', true)
-                .single();
+            console.log('Login attempt for user:', userId);
+            
+            // Step 1: データベース関数を呼び出してユーザー情報を取得
+            const { data: authResult, error: authError } = await supabase
+                .rpc('authenticate_user', {
+                    p_user_code: userId,
+                    p_password: password  // 注意：実際にはパスワードは使用しない
+                });
 
-            if (userError || !userData) {
-                console.error('User not found:', userError);
-                return { success: false, error: '担当者IDが見つかりません' };
+            if (authError) {
+                console.error('Authentication function error:', authError);
+                return { success: false, error: 'システムエラーが発生しました' };
             }
 
-            // Step 2: 取得したメールアドレスでログイン
-            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            if (!authResult.success) {
+                return { success: false, error: authResult.error };
+            }
+
+            const userData = authResult.user;
+            console.log('User found:', userData.email);
+
+            // Step 2: Supabase Authでログイン
+            const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
                 email: userData.email,
                 password: password
             });
 
-            if (authError) {
-                console.error('Auth error:', authError);
-                return { success: false, error: 'パスワードが正しくありません' };
+            if (signInError) {
+                console.error('Sign in error:', signInError);
+                
+                if (signInError.message.includes('Invalid login credentials')) {
+                    return { success: false, error: 'パスワードが正しくありません' };
+                }
+                return { success: false, error: 'ログインに失敗しました' };
             }
 
-            // Step 3: ユーザープロファイルを取得（店舗情報含む）
+            // Step 3: ログイン成功後、改めてユーザープロファイルを取得
             const profile = await this.getUserProfile(authData.user.id);
             if (!profile) {
+                console.error('Failed to get user profile after login');
                 await supabase.auth.signOut();
                 return { success: false, error: 'ユーザー情報の取得に失敗しました' };
             }
@@ -42,7 +55,7 @@ const Auth = {
             this.currentUser = authData.user;
             this.currentUserProfile = profile;
 
-            console.log('Login successful:', profile);
+            console.log('Login successful');
             return { success: true, user: authData.user, profile };
 
         } catch (error) {
@@ -68,9 +81,11 @@ const Auth = {
         }
     },
 
-    // ユーザープロファイル取得（店舗情報含む）
+    // ユーザープロファイル取得（認証後のみ）
     async getUserProfile(userId) {
         try {
+            console.log('Getting user profile for:', userId);
+            
             const { data, error } = await supabase
                 .from('users')
                 .select(`
@@ -85,6 +100,7 @@ const Auth = {
                 return null;
             }
 
+            console.log('Profile fetched successfully');
             return data;
         } catch (error) {
             console.error('Get user profile error:', error);
@@ -102,6 +118,8 @@ const Auth = {
                 console.log('No active session');
                 return { authenticated: false };
             }
+
+            console.log('Active session found for:', session.user.email);
 
             // ユーザープロファイルを取得
             const profile = await this.getUserProfile(session.user.id);
@@ -159,7 +177,7 @@ const Auth = {
             return false;
         }
 
-        console.log('User authenticated:', authStatus.profile);
+        console.log('User authenticated:', authStatus.profile.user_name);
         
         // ユーザー情報をUIに反映
         this.updateUIWithUserInfo();
@@ -194,8 +212,9 @@ const Auth = {
             if (event === 'SIGNED_OUT') {
                 window.location.href = './login.html';
             } else if (event === 'SIGNED_IN' && session) {
-                // サインイン時の処理（必要に応じて）
-                console.log('User signed in');
+                console.log('User signed in:', session.user.email);
+            } else if (event === 'TOKEN_REFRESHED') {
+                console.log('Token refreshed');
             }
         });
     }
