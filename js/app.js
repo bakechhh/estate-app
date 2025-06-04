@@ -315,9 +315,23 @@ style.textContent = `
 document.head.appendChild(style);
 
 // DOMContentLoaded後に初期化
-document.addEventListener('DOMContentLoaded', () => {
-    EstateApp.init();
-});
+<script>
+    // 既存のEstateApp.init()の前に認証チェックを追加
+    document.addEventListener('DOMContentLoaded', async () => {
+        // 認証状態の確認
+        const authStatus = await Auth.checkAuth();
+        if (authStatus.authenticated) {
+            // ユーザー情報を表示
+            const userInfo = document.getElementById('user-info');
+            if (userInfo && Auth.currentUserProfile) {
+                userInfo.textContent = `${Auth.currentUserProfile.user_name} (${Auth.currentUserProfile.store.store_name})`;
+            }
+            
+            // 既存のアプリケーション初期化
+            EstateApp.init();
+        }
+    });
+</script>
 
 // グローバルスコープに公開
 window.EstateApp = EstateApp;
