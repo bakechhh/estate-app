@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - 不動産売買管理システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ログインページ専用スタイル */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-container {
+            background: var(--bg-primary);
+            padding: 3rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-header h1 {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-header p {
+            color: var(--text-secondary);
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-group label {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .form-group input {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+        
+        .login-button {
+            padding: 1rem;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .login-button:hover {
+            background-color: #1557b0;
+        }
+        
+        .login-button:disabled {
+            background-color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            background-color: rgba(234, 67, 53, 0.1);
+            color: var(--danger-color);
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            display: none;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🏢 不動産売買管理システム</h1>
+            <p>担当者IDとパスワードでログイン</p>
+        </div>
+        
+        <form id="login-form" class="login-form">
+            <div class="form-group">
+                <label for="user-id">担当者ID</label>
+                <input type="text" id="user-id" required placeholder="例: A001">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">パスワード</label>
+                <input type="password" id="password" required placeholder="パスワードを入力">
+            </div>
+            
+            <div id="error-message" class="error-message"></div>
+            
+            <button type="submit" id="login-button" class="login-button">
+                ログイン
+            </button>
+        </form>
+    </div>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // ログインフォームの処理
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userId = document.getElementById('user-id').value;
+            const password = document.getElementById('password').value;
+            const button = document.getElementById('login-button');
+            const errorDiv = document.getElementById('error-message');
+            
+            // エラーメッセージをクリア
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+            
+            // ボタンを無効化
+            button.disabled = true;
+            button.innerHTML = '<div class="loading"></div>';
+            
+            try {
+                const result = await Auth.login(userId, password);
+                
+                if (result.success) {
+                    // ログイン成功 - メインページへリダイレクト
+                    window.location.href = './index.html';
+                } else {
+                    // エラー表示
+                    errorDiv.textContent = result.error || 'ログインに失敗しました';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.textContent = 'システムエラーが発生しました';
+                errorDiv.style.display = 'block';
+            } finally {
+                // ボタンを有効化
+                button.disabled = false;
+                button.textContent = 'ログイン';
+            }
+        });
+    </script>
+</body>
+</html>
