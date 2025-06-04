@@ -314,10 +314,8 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// DOMContentLoaded後に初期化
-<script>
-    // 既存のEstateApp.init()の前に認証チェックを追加
-    document.addEventListener('DOMContentLoaded', async () => {
+// 既存のEstateApp.init()の前に認証チェックを追加
+document.addEventListener('DOMContentLoaded', async () => {
         // 認証状態の確認
         const authStatus = await Auth.checkAuth();
         if (authStatus.authenticated) {
@@ -331,7 +329,6 @@ document.head.appendChild(style);
             EstateApp.init();
         }
     });
-</script>
 
 // グローバルスコープに公開
 window.EstateApp = EstateApp;
