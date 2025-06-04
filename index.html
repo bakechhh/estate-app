@@ -12,11 +12,26 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
 </head>
 <body>
+    <script>
+        // ページ読み込み時に認証チェック
+        (async function() {
+            const isAuthenticated = await Auth.initProtectedPage();
+            if (!isAuthenticated) {
+                // 認証されていない場合は、initProtectedPage内でリダイレクトされる
+                return;
+            }
+            
+            // 認証リスナーの設定
+            Auth.setupAuthListener();
+        })();
+    </script>
     <div id="app">
         <!-- ヘッダー -->
         <header>
             <h1>不動産売買管理システム</h1>
             <div class="header-actions">
+                <span id="user-info" style="color: white; margin-right: 1rem;"></span>
+                <button class="icon-btn" onclick="Auth.logout()" aria-label="ログアウト" title="ログアウト">🚪</button>
                 <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
                 <!-- TODOクイックアクセスボタンを追加 -->
                 <button class="icon-btn" onclick="Todos.showTodoModal()" aria-label="TODO追加">📝</button>
