@@ -10,8 +10,14 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
+    
+    <!-- 🔴 ここに追加 1: Supabase関連のスクリプト -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
 </head>
 <body>
+    <!-- 🔴 ここに追加 2: 認証チェックスクリプト（bodyタグの直後） -->
     <script>
         // ページ読み込み時に認証チェック
         (async function() {
@@ -25,18 +31,19 @@
             Auth.setupAuthListener();
         })();
     </script>
+
     <div id="app">
         <!-- ヘッダー -->
         <header>
             <h1>不動産売買管理システム</h1>
             <div class="header-actions">
-                <span id="user-info" style="color: white; margin-right: 1rem;"></span>
+                <!-- 🔴 ここに追加 3: ユーザー情報表示とログアウトボタン -->
+                <span id="user-info" style="color: white; margin-right: 1rem; font-size: 0.9rem;"></span>
                 <button class="icon-btn" onclick="Auth.logout()" aria-label="ログアウト" title="ログアウト">🚪</button>
+                
+                <!-- 既存のボタン -->
                 <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
-                <!-- TODOクイックアクセスボタンを追加 -->
                 <button class="icon-btn" onclick="Todos.showTodoModal()" aria-label="TODO追加">📝</button>
-    
-                <!-- ランキングボタンを追加 -->
                 <button class="icon-btn" onclick="Goals.showRanking()" aria-label="ランキング">🏆</button>
                 <button id="notification-btn" class="icon-btn" aria-label="通知">🔔</button>
                 <button id="theme-toggle" class="icon-btn" aria-label="テーマ切替">🌓</button>
@@ -699,9 +706,6 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/inventory.js"></script>
@@ -717,5 +721,22 @@
     <script src="js/memos.js"></script>
     <script src="js/todos.js"></script>
     <script src="js/app.js"></script>
+<script>
+        // DOMContentLoaded後に初期化（認証チェック付き）
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 認証状態の確認
+            const authStatus = await Auth.checkAuth();
+            if (authStatus.authenticated) {
+                // ユーザー情報を表示
+                const userInfo = document.getElementById('user-info');
+                if (userInfo && Auth.currentUserProfile) {
+                    userInfo.textContent = `${Auth.currentUserProfile.user_name} (${Auth.currentUserProfile.store.store_name})`;
+                }
+                
+                // 既存のアプリケーション初期化
+                EstateApp.init();
+            }
+        });
+    </script>
 </body>
 </html>
