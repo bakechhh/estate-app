@@ -7,9 +7,23 @@ const Auth = {
     // ログイン処理
     async login(userId, password) {
         try {
-            // まず、ユーザーIDからメールアドレスを取得（一時的な実装）
-            // 本番では、user_codeでユーザーを検索してメールアドレスを取得
-            const email = `${userId}@estate-system.local`;
+            // まず、user_codeからユーザー情報を取得
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('id')
+                .eq('user_code', userId)
+                .eq('is_active', true)
+                .single();
+
+            if (userError || !userData) {
+                console.error('User lookup error:', userError);
+                return { success: false, error: '担当者IDが見つかりません' };
+            }
+
+            // ユーザーIDからAuthユーザーのメールアドレスを取得
+            // 注意: 実際の実装では、usersテーブルにemailカラムを追加するか、
+            // auth.usersビューを使用することを推奨
+            const email = `${userId.toLowerCase()}@example.com`;
             
             // Supabase Authでログイン
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -24,7 +38,7 @@ const Auth = {
                 if (error.message.includes('Invalid login credentials')) {
                     return { success: false, error: '担当者IDまたはパスワードが正しくありません' };
                 }
-                return { success: false, error: error.message };
+                return { success: false, error: 'ログインに失敗しました' };
             }
 
             // ユーザープロファイルを取得
